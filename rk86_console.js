@@ -1,8 +1,6 @@
-﻿// import Terminal from "./termlib/termlib.js";
-// import Parser from "./termlib/termlib_parser.js";
+﻿import { Terminal } from "./xterm.mjs";
+
 import "./format.js";
-import { Terminal } from "./xterm.mjs";
-// import "https://esm.sh/xterm@5.3.0/css/xterm.css";
 import { hex16 } from "./hex.js";
 import { i8080_opcode } from "./i8080_disasm.js";
 import { saveAs } from "./saver.js";
