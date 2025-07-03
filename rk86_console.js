@@ -27,9 +27,6 @@ export function Console(machine) {
         ["П", "Я", "Р", "С", "Т", "У", "Ж", "В", "Ь", "Ы", "З", "Ш", "Э", "Щ", "Ч", "~"],
     ].flat();
 
-    // this.dump_cmd_last_address = 0;
-    // this.dump_cmd_last_length = 128;
-
     this.dump_cmd = (args) => {
         let from = parseNumber(args[0]);
         if (isNaN(from)) from = this.dump_cmd.last_address || 0;
@@ -611,7 +608,7 @@ export function Console(machine) {
         this.ui = machine.ui;
         this.runner = machine.runner;
 
-        this.term = new Terminal({ cols: 80, rows: 24, theme: { foreground: "#00ff00" } });
+        this.term = new Terminal({ cols: 80, rows: 24, fontSize: 14, theme: { foreground: "#00ff00" } });
         this.term.prompt = () => this.term.write("\r\n> ");
 
         this.term.open(document.getElementById("console"));
