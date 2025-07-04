@@ -129,6 +129,7 @@ export async function main() {
     window.i8080disasm = machine.ui.i8080disasm;
 
     machine.ui.terminal = new Console(machine);
+    machine.ui.terminal.init(machine);
 
     machine.ui.start_update_perf();
 }

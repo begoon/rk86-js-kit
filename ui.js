@@ -156,7 +156,7 @@ export class UI {
             });
         }
 
-        document.getElementById("console_toggle").addEventListener("click", () => {
+        document.getElementById("terminal_toggle").addEventListener("click", () => {
             this.toggle_terminal();
         });
 

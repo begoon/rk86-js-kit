@@ -265,5 +265,13 @@ export function i8080_opcode(opcode, byte2, byte3) {
         0xfe: { cmd: "CPI", length: 2, arg1: imm8 },
         0xff: { cmd: "RST", length: 1, arg1: "7" },
     };
-    return opcodes[opcode];
+    const instr = opcodes[opcode];
+
+    const { cmd, arg1, arg2 } = instr;
+    instr.instr = cmd.padEnd(5, " ");
+    if (arg1) instr.instr += " " + arg1;
+    if (arg2) instr.instr += ", " + arg2;
+    instr.instr = instr.instr.trim();
+
+    return instr;
 }

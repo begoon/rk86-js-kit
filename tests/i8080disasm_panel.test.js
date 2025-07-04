@@ -27,6 +27,7 @@ test("disasm", () => {
         length: 3,
         arg1: "BBAA",
         code: true,
+        instr: "CALL  BBAA",
     });
 });
 
