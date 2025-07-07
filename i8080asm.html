@@ -3,8 +3,6 @@
 
 <head>
   <title>Pretty i8080 Assembler</title>
-  <script src="js/StringUtils.js" type="application/javascript"></script>
-  <script src="js/FileSaver.js" type="application/javascript"></script>
   <script type="text/javascript">
     //
     // Pretty i8080 Assembler
@@ -53,7 +51,7 @@
     // TODO: evaluation should ignore precedence, it's all left-to-right
     //
     // Partially modified for Radio-86RK in JavaScript project.
-    // Copyright (c) 2009, 2012 Alexander Demin
+    // Copyright (c) 2009, 2015 Alexander Demin
     //
 
     // -- global DOM elements
@@ -1671,15 +1669,26 @@
       parent.cpu.jump(start_address);
     }
 
+    function saveAs(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    }
+
     var download_source_count = 0;
-    var download_source_this = this;
     function download_source() {
       var source = save_source();
       var blob = new Blob([source], { type: "text/plain" });
-      var filename = "assembler-source-%d.asm".format(
-        download_source_this.download_source_count
-      );
-      download_source_this.download_source_count += 1;
+      var filename = `assembler-source-${download_source_count.toString(10)}.asm`
+      download_source_count += 1;
       saveAs(blob, filename);
     }
 
@@ -1695,17 +1704,17 @@
     }
 
     var download_binary_count = 0;
-    var download_binary_this = this;
     function download_binary() {
       var [start_address, binary] = download_binary_snapshot();
       var binary_array = new Uint8Array(binary);
-      var blob = new Blob([binary_array], { type: "image/gif" });
-      var filename = "assembler-binary-%04X-%04X-%d.bin".format(
-        start_address,
-        start_address + binary.length,
-        download_binary_this.download_binary_count
-      );
-      download_binary_this.download_binary_count += 1;
+      var blob = new Blob([binary_array], { type: "application/octet-stream" });
+      var filename = [
+        "assembler-binary",
+        hex16(start_address),
+        hex16(start_address + binary.length),
+        download_binary_count.toString(10),
+      ].join("-") + ".bin";
+      download_binary_count += 1;
       saveAs(blob, filename);
     }
 

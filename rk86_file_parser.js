@@ -55,7 +55,7 @@ export default function FileParser() {
         }
 
         if (image.length > 0x10000) {
-            throw new Error(`ERROR! Loaded file "${file.name}" length ${image.length} is more than 65556.`);
+            throw new Error(`Ошибка! Длина Файла "${file.name}" ${image.length} превышает 65556.`);
         }
 
         const ext = this.file_ext(file.name);

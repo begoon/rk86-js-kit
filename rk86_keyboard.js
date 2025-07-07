@@ -1,3 +1,5 @@
+import { fromHex, hex8 } from "./hex.js";
+
 export class Keyboard {
     constructor() {
         this.reset();
@@ -9,7 +11,7 @@ export class Keyboard {
     }
 
     export() {
-        const h8 = (n) => "0x" + toHex8(n);
+        const h8 = (n) => "0x" + hex8(n);
         return {
             state: this.state.map(h8),
             modifiers: h8(this.modifiers),

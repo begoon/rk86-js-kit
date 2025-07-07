@@ -87,7 +87,10 @@
                         <img class="icon" id="assembler_icon" src="i/asm.svg" />
                     </button>
                     <button id="disassembler_toggle" class="icon" data-text="Дизассемблер">
-                        <img class="icon" id="disassembler_icon" src="i/disassembler-off.svg" />
+                        <img class="icon" id="disassembler_icon" src="i/disasm.svg" />
+                    </button>
+                    <button id="visualizer_toggle" class="icon" data-text="Визуализация">
+                        <img class="icon" id="visualizer_icon" src="i/visualizer.svg" />
                     </button>
                     <button id="screenshot" class="icon" data-text="Снимок экрана">
                         <img class="icon" src="i/screenshot.svg" />
@@ -268,6 +271,7 @@
                         <div><mark>k</mark> - консоль</div>
                         <div><mark>a</mark> - ассемблер</div>
                         <div><mark>d</mark> - дизассемблер</div>
+                        <div><mark>v</mark> - визуализация</div>
                         <div><mark>r</mark> - перезапустить эмулятор</div>
                         <div><mark>s</mark> - звук</div>
                         <div><mark>f</mark> - полноэкранный режим</div>
@@ -332,14 +336,28 @@
                         width: fit-content;
                         height: fit-content;
                         overflow: auto;
-                        /* background-color: #000000;
-                        color: #ffffffff; */
                         border: 1px solid green;
                         padding: 4px 4px 4px 4px;
-                        /* font-family: monospace; */
                         display: none;
                     "
                 ></div>
+            </div>
+            <div>
+                <iframe
+                    src="./i8080_visualizer.html"
+                    id="visualizer_panel"
+                    tabindex="0"
+                    style="
+                        position: absolute;
+                        bottom: 2em;
+                        right: 1em;
+                        width: 474px;
+                        height: 348px;
+                        overflow: auto;
+                        border: 1px solid green;
+                        display: none;
+                    "
+                ></iframe>
             </div>
         </div>
     </body>

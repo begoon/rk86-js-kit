@@ -92,7 +92,7 @@ class I8080DisasmPanel {
     }
 
     #dump(addr, lines) {
-        return this.renderDump(addr, lines);
+        document.getElementById("disasm_data").innerHTML = this.renderDump(addr, lines);
     }
 
     form_go_code() {

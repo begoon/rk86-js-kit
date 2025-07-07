@@ -1,3 +1,4 @@
+import { fromHex, hex16 } from "./hex.js";
 export class Screen {
     static #update_rate = 25;
 
@@ -20,7 +21,7 @@ export class Screen {
         this.width = 78;
         this.height = 30;
 
-        this.cursor_state = true;
+        this.cursor_state = false;
         this.cursor_x = 0;
         this.cursor_y = 0;
 
@@ -38,24 +39,59 @@ export class Screen {
 
         this.last_video_memory_base = -1;
         this.last_video_memory_size = -1;
+    }
 
-        this.init();
-        this.flip_cursor();
-        this.draw_screen();
-
-        this.machine.ui.canvas.onmousemove = this.handle_mousemove.bind(this);
-        this.machine.ui.canvas.onmouseup = () => {
-            this.light_pen_active = 0;
-        };
-        this.machine.ui.canvas.onmousedown = () => {
-            this.light_pen_active = 1;
+    export() {
+        const h16 = (n) => "0x" + hex16(n);
+        return {
+            scale_x: this.scale_x,
+            scale_y: this.scale_y,
+            width: this.width,
+            height: this.height,
+            cursor_state: this.cursor_state ? 1 : 0,
+            cursor_x: this.cursor_x,
+            cursor_y: this.cursor_y,
+            video_memory_base: h16(this.video_memory_base),
+            video_memory_size: h16(this.video_memory_size),
+            light_pen_x: this.light_pen_x,
+            light_pen_y: this.light_pen_y,
+            light_pen_active: this.light_pen_active,
         };
     }
 
+    import(snapshot) {
+        const h = fromHex;
+        this.scale_x = h(snapshot.scale_x);
+        this.scale_y = h(snapshot.scale_y);
+        this.width = h(snapshot.width);
+        this.height = h(snapshot.height);
+        this.cursor_state = h(snapshot.cursor_state);
+        this.cursor_x = h(snapshot.cursor_x);
+        this.cursor_y = h(snapshot.cursor_y);
+        this.video_memory_base = h(snapshot.video_memory_base);
+        this.video_memory_size = h(snapshot.video_memory_size);
+        this.light_pen_x = h(snapshot.light_pen_x);
+        this.light_pen_y = h(snapshot.light_pen_y);
+        this.light_pen_active = h(snapshot.light_pen_active);
+    }
+
+    apply_import() {
+        this.set_geometry(this.width, this.height);
+        this.set_video_memory(this.video_memory_base);
+    }
+
+    start() {
+        this.init();
+        this.draw_screen();
+        this.flip_cursor();
+
+        this.machine.ui.canvas.onmousemove = this.handle_mousemove.bind(this);
+        this.machine.ui.canvas.onmouseup = () => (this.light_pen_active = 0);
+        this.machine.ui.canvas.onmousedown = () => (this.light_pen_active = 1);
+    }
+
     init_cache(sz) {
-        for (let i = 0; i < sz; ++i) {
-            this.cache[i] = true;
-        }
+        for (let i = 0; i < sz; ++i) this.cache[i] = true;
     }
 
     draw_char(x, y, ch) {

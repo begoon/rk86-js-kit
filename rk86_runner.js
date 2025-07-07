@@ -23,7 +23,6 @@ export function Runner(machine) {
 
     this.paused = false;
     this.tracer = null;
-    this.visualizer = null;
 
     this.last_instructions = [];
 
@@ -81,8 +80,8 @@ export function Runner(machine) {
                     this.tracer("after");
                     if (this.paused) break;
                 }
-                if (this.visualizer) {
-                    this.visualizer.hit(this.cpu.memory.read_raw(this.cpu.pc));
+                if (this.machine.ui.visualizer_visible) {
+                    window.visualizer.hit(this.machine.memory.read_raw(this.machine.cpu.pc));
                 }
                 batch_instructions += 1;
             }

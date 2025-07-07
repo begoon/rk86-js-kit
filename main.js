@@ -56,6 +56,8 @@ export async function main() {
     machine.memory.load_file(await load_file("GFIRE.GAM"));
     // machine.memory.load_file(await load_file("RESCUE.GAM"));
 
+    machine.screen.start();
+
     machine.runner.execute();
 
     bus.on("reset", () => reset());
@@ -137,6 +139,8 @@ export async function main() {
     window.cpu = machine.cpu;
     window.memory = machine.memory;
     window.runner = machine.runner;
+
+    window.machine = machine;
 }
 
 await main();

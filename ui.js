@@ -87,7 +87,7 @@ export class UI {
         if (this.terminal_visible && this.disassembler_visible) this.toggle_terminal();
 
         this.disassembler_panel.style.display = this.disassembler_visible ? "block" : "none";
-        this.disassembler_icon.src = "i/disassembler-" + (this.disassembler_visible ? "on" : "off") + ".svg";
+        // this.disassembler_icon.src = "i/disassembler-" + (this.disassembler_visible ? "on" : "off") + ".svg";
         this.machine.ui.i8080disasm.refresh();
         this.machine.ui.i8080disasm.go_code(this.machine.cpu.pc);
     }
@@ -100,6 +100,13 @@ export class UI {
 
         if (this.terminal_visible) this.terminal.focus();
         // this.terminal_icon.src = "i/terminal-" + (this.disassembler_visible ? "on" : "off") + ".svg";
+    }
+
+    toggle_visualizer() {
+        this.visualizer_visible = !this.visualizer_visible;
+        if (this.terminal_visible && this.disassembler_visible) this.toggle_disassembler();
+
+        this.visualizer_panel.style.display = this.visualizer_visible ? "block" : "none";
     }
 
     configureEventListeners() {
@@ -178,6 +185,14 @@ export class UI {
             });
         }
 
+        {
+            this.visualizer_panel = document.getElementById("visualizer_panel");
+            this.visualizer_visible = false;
+        }
+        document.getElementById("visualizer_toggle").addEventListener("click", () => {
+            this.toggle_visualizer();
+        });
+
         document.getElementById("terminal_toggle").addEventListener("click", () => {
             this.toggle_terminal();
         });
@@ -234,6 +249,9 @@ export class UI {
                     case "KeyD":
                         this.toggle_disassembler();
                         this.disassembler_panel.focus();
+                        break;
+                    case "KeyV":
+                        this.toggle_visualizer();
                         break;
                     case "KeyS":
                         this.sound.click();
