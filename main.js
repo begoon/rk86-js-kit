@@ -98,8 +98,78 @@ export async function main() {
     machine.memory.update_ruslat = machine.ui.update_ruslat;
 
     const file_selector = document.getElementById("file_selector");
+    const catalog = document.getElementById("catalog_files");
     for (const name of tape_catalog()) {
-        file_selector.add(new Option(name, name), null);
+        const option = document.createElement("option");
+        option.value = name;
+        catalog.appendChild(option);
+    }
+    file_selector.addEventListener("keyup", (event) => {
+        if (event.key === "Escape") {
+            file_selector.value = "";
+            file_selector.blur();
+        }
+        event.stopPropagation();
+    });
+    file_selector.addEventListener("keydown", (event) => event.stopPropagation());
+    file_selector.addEventListener("blur", (event) => {
+        selected_file = file_selector.value;
+        document.getElementById("selected_file").textContent = selected_file;
+        file_selector.style.display = "none";
+        document.getElementById("selected_file").style.display = selected_file ? "block" : "none";
+        event.stopPropagation();
+    });
+    file_selector.addEventListener("change", (event) => {
+        event.stopPropagation();
+        file_selector.blur();
+    });
+
+    const upload_selector = document.getElementById("upload_selector");
+    upload_selector.addEventListener("change", async (event) => {
+        event.stopPropagation();
+        const file = upload_selector.files[0];
+        console.log(`uploading file: ${file.name}`);
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const array = Array.from(new Uint8Array(e.target.result));
+            console.log(`loaded file: ${file.name}, size: ${array.length} bytes`);
+            try {
+                const parsed_file = machine.file_parser.parse_rk86_binary(file.name, array);
+                machine.memory.load_file(parsed_file);
+                selected_file = parsed_file.name;
+                selected_file_entry = parsed_file.entry;
+                window.selected_file_entry = selected_file_entry;
+                alert(
+                    `Загружен файл "${parsed_file.name}"\n` +
+                        `Адрес: 0x${parsed_file.start.toString(16).padStart(4, "0")}` +
+                        `-` +
+                        `0x${parsed_file.end.toString(16).padStart(4, "0")}\n` +
+                        `Запуск: G${parsed_file.entry.toString(16)}`
+                );
+                document.getElementById("selected_file").textContent = selected_file;
+                document.getElementById("selected_file").style.display = "block";
+            } catch (error) {
+                console.error(`Error loading file: ${error.message}`);
+                alert(`Ошибка загрузки файла: ${error.message}`);
+            }
+        };
+        reader.onerror = (error) => {
+            console.error(`Error reading file: ${error.message}`);
+            alert(`Ошибка чтения файла: ${error.message}`);
+        };
+        reader.readAsArrayBuffer(file);
+        upload_selector.value = ""; // Reset the file input
+        file_selector.value = selected_file; // Update the file selector with the uploaded file name
+        document.getElementById("selected_file").style.display = "none"; // Hide the selected file input
+    });
+
+    let selected_file = undefined;
+    let selected_file_entry = 0;
+
+    if (selected_file) {
+        document.getElementById("selected_file").textContent = selected_file;
+        document.getElementById("selected_file").style.display = "block";
     }
 
     document.getElementById("load").addEventListener("click", async () => {
@@ -119,7 +189,8 @@ export async function main() {
     });
 
     document.getElementById("run").addEventListener("click", async () => {
-        const filename = file_selector.options[file_selector.selectedIndex].value;
+        if (!selected_file) return alert("Не выбран файл для запуска.");
+        const filename = selected_file;
         console.log(`loading file: ${filename}`);
         const file = await load_file(filename);
         console.log(`loaded file: ${filename}`);

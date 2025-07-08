@@ -1,3 +1,5 @@
+import moveable from "./moveable.js";
+
 export class UI {
     constructor(machine) {
         this.machine = machine;
@@ -72,14 +74,17 @@ export class UI {
     toggle_assembler() {
         this.assembler_visible = !this.assembler_visible;
 
+        this.toggle_icon("assembler_toggle", this.assembler_visible);
+
         this.assembler_panel.style.display = this.assembler_visible ? "block" : "none";
         this.canvas.style.display = this.assembler_visible ? "none" : "block";
 
-        if (this.assembler_visible) {
-            this.assembler_panel.focus();
-        } else {
-            this.canvas.focus();
-        }
+        if (this.assembler_visible) this.assembler_panel.focus();
+        else this.canvas.focus();
+    }
+
+    toggle_icon(element, active) {
+        document.getElementById(element).classList.toggle("active", active);
     }
 
     toggle_disassembler() {
@@ -87,7 +92,9 @@ export class UI {
         if (this.terminal_visible && this.disassembler_visible) this.toggle_terminal();
 
         this.disassembler_panel.style.display = this.disassembler_visible ? "block" : "none";
-        // this.disassembler_icon.src = "i/disassembler-" + (this.disassembler_visible ? "on" : "off") + ".svg";
+
+        this.toggle_icon("disassembler_toggle", this.disassembler_visible);
+
         this.machine.ui.i8080disasm.refresh();
         this.machine.ui.i8080disasm.go_code(this.machine.cpu.pc);
     }
@@ -98,8 +105,9 @@ export class UI {
 
         this.terminal_panel.style.display = this.terminal_visible ? "block" : "none";
 
+        this.toggle_icon("terminal_toggle", this.terminal_visible);
+
         if (this.terminal_visible) this.terminal.focus();
-        // this.terminal_icon.src = "i/terminal-" + (this.disassembler_visible ? "on" : "off") + ".svg";
     }
 
     toggle_visualizer() {
@@ -107,6 +115,8 @@ export class UI {
         if (this.terminal_visible && this.disassembler_visible) this.toggle_disassembler();
 
         this.visualizer_panel.style.display = this.visualizer_visible ? "block" : "none";
+
+        this.toggle_icon("visualizer_toggle", this.visualizer_visible);
     }
 
     configureEventListeners() {
@@ -133,112 +143,61 @@ export class UI {
             setTimeout(() => icon.classList.remove("visible"), 2000);
         });
 
-        document.getElementById("assembler_toggle").addEventListener("click", () => {
-            this.toggle_assembler();
+        document.getElementById("catalog").addEventListener("click", () => {
+            document.getElementById("selected_file").style.display = "none";
+            document.getElementById("file_selector").style.display = "block";
+            document.getElementById("file_selector").focus();
         });
 
-        {
-            this.assembler_panel = document.getElementById("assembler_panel");
-            this.assembler_visible = false;
-        }
+        document.getElementById("assembler_toggle").addEventListener("click", () => this.toggle_assembler());
+        this.assembler_panel = document.getElementById("assembler_panel");
+        this.assembler_visible = false;
 
-        document.getElementById("disassembler_toggle").addEventListener("click", () => {
-            this.toggle_disassembler();
-        });
+        document.getElementById("disassembler_toggle").addEventListener("click", () => this.toggle_disassembler());
 
-        {
-            this.disassembler_panel = document.getElementById("disassembler_panel");
-            this.disassembler_icon = document.getElementById("disassembler_icon");
-            this.disassembler_visible = false;
+        this.disassembler_panel = document.getElementById("disassembler_panel");
+        this.disassembler_icon = document.getElementById("disassembler_icon");
+        this.disassembler_visible = false;
 
-            this.disassemblerOffsetX = 0;
-            this.disassemblerOffsetY = 0;
-            this.disassemblerIsDragging = false;
+        moveable(this.disassembler_panel)();
 
-            this.disassembler_panel.addEventListener("mousedown", (e) => {
-                this.disassemblerIsDragging = true;
-                this.disassemblerOffsetX = e.clientX - this.disassembler_panel.offsetLeft;
-                this.disassemblerOffsetY = e.clientY - this.disassembler_panel.offsetTop;
-            });
+        // visualizer
 
-            this.disassembler_panel.addEventListener("mousemove", (e) => {
-                if (this.disassemblerIsDragging) {
-                    const left = e.clientX - this.disassemblerOffsetX;
-                    const top = e.clientY - this.disassemblerOffsetY;
+        this.visualizer_panel = document.getElementById("visualizer_panel");
+        this.visualizer_visible = false;
 
-                    const width = document.documentElement.clientWidth;
-                    const height = document.documentElement.clientHeight;
+        moveable(this.visualizer_panel)();
 
-                    if (left < 0 || left + this.disassembler_panel.offsetWidth > width - 1) {
-                        return;
-                    }
-                    if (top < 0 || top + this.disassembler_panel.offsetHeight > height - 1) {
-                        return;
-                    }
-                    this.disassembler_panel.style.left = left + "px";
-                    this.disassembler_panel.style.top = top + "px";
-                }
-            });
+        document.getElementById("visualizer_toggle").addEventListener("click", () => this.toggle_visualizer());
+        document.getElementById("terminal_toggle").addEventListener("click", () => this.toggle_terminal());
 
-            this.disassembler_panel.addEventListener("mouseup", () => {
-                this.disassemblerIsDragging = false;
-            });
-        }
+        this.terminal_panel = document.getElementById("terminal_panel");
+        this.terminal_icon = document.getElementById("terminal_icon");
+        this.terminal_visible = false;
 
-        {
-            this.visualizer_panel = document.getElementById("visualizer_panel");
-            this.visualizer_visible = false;
-        }
-        document.getElementById("visualizer_toggle").addEventListener("click", () => {
-            this.toggle_visualizer();
-        });
-
-        document.getElementById("terminal_toggle").addEventListener("click", () => {
-            this.toggle_terminal();
-        });
-
-        {
-            this.terminal_panel = document.getElementById("terminal_panel");
-            this.terminal_icon = document.getElementById("terminal_icon");
-            this.terminal_visible = false;
-
-            this.teminalOffsetX = 0;
-            this.teminalOffsetY = 0;
-            this.teminalIsDragging = false;
-
-            this.terminal_panel.addEventListener("mousedown", (e) => {
-                this.terminalIsDragging = true;
-                this.terminalOffsetX = e.clientX - this.terminal_panel.offsetLeft;
-                this.terminalOffsetY = e.clientY - this.terminal_panel.offsetTop;
-            });
-
-            this.terminal_panel.addEventListener("mousemove", (e) => {
-                if (this.terminalIsDragging) {
-                    const left = e.clientX - this.terminalOffsetX;
-                    const top = e.clientY - this.terminalOffsetY;
-
-                    const width = document.documentElement.clientWidth;
-                    const height = document.documentElement.clientHeight;
-
-                    if (left < 0 || left + this.terminal_panel.offsetWidth > width - 1) {
-                        return;
-                    }
-                    if (top < 0 || top + this.terminal_panel.offsetHeight > height - 1) {
-                        return;
-                    }
-                    this.terminal_panel.style.left = left + "px";
-                    this.terminal_panel.style.top = top + "px";
-                }
-            });
-
-            this.terminal_panel.addEventListener("mouseup", () => {
-                this.terminalIsDragging = false;
-            });
-        }
-
+        moveable(this.terminal_panel)();
         document.onkeydown = (event) => {
             if (this.command_mode) {
                 switch (event.code) {
+                    case "KeyL":
+                        document.getElementById("selected_file").style.display = "none";
+                        document.getElementById("file_selector").style.display = "block";
+                        document.getElementById("file_selector").focus();
+                        event.preventDefault();
+                        break;
+                    case "KeyU":
+                        document.querySelector("#upload_selector").click();
+                        event.preventDefault();
+                        break;
+                    case "KeyP":
+                        pause.click();
+                        break;
+                    case "KeyG":
+                        this.machine.cpu.jump(window.selected_file_entry);
+                        console.log("запуск с адреса " + window.selected_file_entry.toString(16));
+                        this.machine.runner.execute();
+                        event.preventDefault();
+                        break;
                     case "KeyK":
                         this.toggle_terminal();
                         event.preventDefault();
@@ -355,6 +314,22 @@ export class UI {
         });
         document.getElementById("disasm_form_data_shift_forward_one").addEventListener("click", () => {
             this.machine.ui.i8080disasm.go_data_shift(1, { one: true });
+        });
+
+        document
+            .getElementById("upload")
+            .addEventListener("click", () => document.querySelector("#upload_selector").click());
+
+        const hint = document.getElementById("hint");
+        document.querySelectorAll("button.icon").forEach((button) => {
+            button.addEventListener("mouseover", () => {
+                hint.style.opacity = 1;
+                hint.textContent = button.dataset.text;
+            });
+            button.addEventListener("mouseout", () => {
+                hint.style.opacity = 0;
+                hint.textContent = "";
+            });
         });
     }
 
