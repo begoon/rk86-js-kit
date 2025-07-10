@@ -195,10 +195,11 @@ export class Screen {
 
     handle_mousemove(event) {
         const canvas = this.machine.ui.canvas;
-        const x = Math.floor((event.x + 1 - canvas.offsetLeft) / (this.char_width * this.scale_x));
-        const y = Math.floor(
-            (event.y + 1 - canvas.offsetTop) / ((this.char_height + this.char_height_gap) * this.scale_y)
-        );
+        const rect = canvas.getBoundingClientRect();
+
+        const x = Math.floor((event.clientX - rect.left) / (this.char_width * this.scale_x));
+        const y = Math.floor((event.clientY - rect.top) / ((this.char_height + this.char_height_gap) * this.scale_y));
+
         this.light_pen_x = x;
         this.light_pen_y = y;
     }

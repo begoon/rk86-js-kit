@@ -5,13 +5,13 @@ import { Console } from "./rk86_console.js";
 import FileParser from "./rk86_file_parser.js";
 import { rk86_font_image } from "./rk86_font.js";
 import { Keyboard } from "./rk86_keyboard.js";
+import { convert_keyboard_sequence } from "./rk86_keyboard_injector.js";
 import { Memory } from "./rk86_memory.js";
 import { Runner } from "./rk86_runner.js";
 import { Screen } from "./rk86_screen.js";
+import { rk86_snapshot, rk86_snapshot_restore } from "./rk86_snapshot.js";
 import { Tape } from "./rk86_tape.js";
 import { tape_catalog } from "./tape_catalog.js";
-
-import { rk86_snapshot, rk86_snapshot_restore } from "./rk86_snapshot.js";
 
 import { hex16 } from "./hex.js";
 import moveable from "./moveable.js";
@@ -440,12 +440,6 @@ export class UI {
 }
 
 export async function main() {
-    const url = window.location.href;
-
-    let match;
-    const autoexec_file = (match = url.match(/file=([^&]+)/)) ? match[1] : null;
-    const autoexec_loadonly = (match = url.match(/loadonly=([^&]+)/)) ? match[1] : null;
-
     const keyboard = new Keyboard();
     const io = new IO();
 
@@ -478,37 +472,119 @@ export async function main() {
         return file;
     }
 
-    // this.execute_commands_loop = function (sequence, i) {
-    //     const keyboard = this.runner.cpu.memory.keyboard;
-    //     if (i >= sequence.length) return;
-    //     const { keys, duration, action } = sequence[i];
-    //     const call = action === "down" ? keyboard.onkeydown : keyboard.onkeyup;
-    //     if (action != "pause") keys.forEach((key) => call(key));
-    //     setTimeout(() => this.execute_commands_loop(sequence, i + 1), +duration);
-    // };
+    function translate_key(key) {
+        if (typeof key === "string") return key;
+        return {
+            8: "Backspace",
+            9: "Tab",
+            13: "Enter",
+            16: "ShiftRight",
+            17: "ControlLeft",
+            32: "Space",
+            35: "End",
+            36: "Home",
+            16: "ShiftLeft",
+            37: "ArrowLeft",
+            38: "ArrowUp",
+            39: "ArrowRight",
+            40: "ArrowDown",
+            46: "Delete",
+            48: "Digit0",
+            49: "Digit1",
+            50: "Digit2",
+            51: "Digit3",
+            52: "Digit4",
+            53: "Digit5",
+            54: "Digit6",
+            55: "Digit7",
+            56: "Digit8",
+            57: "Digit9",
+            65: "KeyA",
+            66: "KeyB",
+            67: "KeyC",
+            68: "KeyD",
+            69: "KeyE",
+            70: "KeyF",
+            71: "KeyG",
+            72: "KeyH",
+            73: "KeyI",
+            74: "KeyJ",
+            75: "KeyK",
+            76: "KeyL",
+            77: "KeyM",
+            78: "KeyN",
+            79: "KeyO",
+            80: "KeyP",
+            81: "KeyQ",
+            82: "KeyR",
+            83: "KeyS",
+            84: "KeyT",
+            85: "KeyU",
+            86: "KeyV",
+            87: "KeyW",
+            88: "KeyX",
+            89: "KeyY",
+            90: "KeyZ",
+            112: "F1",
+            113: "F2",
+            114: "F3",
+            115: "F4",
+            116: "F5",
+            117: "F6",
+            118: "F7",
+            121: "F10",
+            186: "Semicolon",
+            188: "Comma",
+            189: "Minus",
+            190: "Period",
+            192: "Quote",
+            191: "Slash",
+            219: "BracketLeft",
+            221: "BracketRight",
+            226: "Backslash",
+        }[key];
+    }
 
-    // this.execute_commands = (commands) => this.execute_commands_loop(commands, 0);
+    function execute_commands_loop(sequence, i) {
+        const { keyboard } = machine;
+        console.log(keyboard);
+        if (i >= sequence.length) return;
+        const { keys, duration, action } = sequence[i];
+        const call = action === "down" ? keyboard.onkeydown : keyboard.onkeyup;
+        console.log(keys, duration, action, call);
+        const translated_keys = keys.map((key) => translate_key(key));
+        if (action != "pause")
+            keys.forEach((key) => {
+                const x = translate_key(key);
+                console.log(typeof key, key, x);
+                call(x);
+            });
+        setTimeout(() => execute_commands_loop(sequence, i + 1), +duration);
+    }
 
-    // this.simulate_keyboard = (commands) => {
-    //     const queue = convert_keyboard_sequence(commands);
-    //     this.execute_commands(queue);
-    // };
+    const execute_commands = (commands) => execute_commands_loop(commands, 0);
+
+    function simulate_keyboard(commands) {
+        const queue = convert_keyboard_sequence(commands);
+        execute_commands(queue);
+    }
+
+    const basename = (url) => url.split("/").at(-1);
 
     function filenameURL(name) {
         if (name.startsWith("http")) return name;
+        if (name.startsWith("./")) return name;
         return "files/" + name;
     }
 
     async function fetch_file(url) {
-        console.log(`Загрузка файла ${url}`);
+        console.log(`загрузка файла ${url}`);
         try {
-            const content = new Uint8Array(await (await fetch(url, { redirect: "follow" })).arrayBuffer());
-            console.log(`Загружен файл: ${url}, размер ${content.length} байт`);
+            const content = new Uint8Array(await (await fetch(url)).arrayBuffer());
+            console.log(`загружен файл %c${basename(url)}%c длиной ${content.length} байт`, "font-weight: bold", "");
             return content;
         } catch (error) {
-            const msg = `Ошибка загрузки файла ${url}: ${error.message}`;
-            console.error(msg);
-            alert(msg);
+            console.error(`ошибка загрузки файла ${url}: ${error}`);
         }
     }
 
@@ -519,15 +595,20 @@ export async function main() {
         place_file(name, content);
     }
 
+    let selected_file_name = "";
+    let selected_file_entry = 0;
+
     function place_file(name, binary) {
-        const json = new FileParser().is_json(binary);
+        console.log("place_file", name, binary.length, "bytes");
+        const parser = machine.file_parser;
+        const json = parser.is_json(binary);
         if (json) {
-            const snapshot = rk86_snapshot_restore(json, machine /*, this.simulate_keyboard*/);
-            console.log(`Образ '${name}' загружен`, hex16(json.cpu.pc));
+            const snapshot = rk86_snapshot_restore(json, machine, simulate_keyboard);
+            console.log(`образ '${name}' загружен`, hex16(json.cpu.pc));
             return;
         }
         try {
-            const file = this.file_parser.parse_rk86_binary(name, binary);
+            const file = parser.parse_rk86_binary(name, binary);
             machine.memory.load_file(file);
             selected_file_name = file.name;
             selected_file_entry = file.entry;
@@ -538,7 +619,7 @@ export async function main() {
                     `запуск: G${file.entry.toString(16)}`
             );
         } catch (e) {
-            alert(e.message);
+            console.error(e);
             return;
         }
     }
@@ -549,6 +630,17 @@ export async function main() {
     // machine.memory.load_file(await load_file("RESCUE.GAM"));
 
     machine.screen.start();
+
+    const url = window.location.href;
+
+    let match;
+    const autoexec_file = (match = url.match(/file=([^&]+)/)) ? match[1] : null;
+    const autoexec_loadonly = (match = url.match(/loadonly=([^&]+)/)) ? match[1] : null;
+
+    if (autoexec_file) {
+        console.log(`Автозагрузка файла: ${autoexec_file}`);
+        await load_file(autoexec_file);
+    }
 
     machine.runner.execute();
 
@@ -643,9 +735,6 @@ export async function main() {
         file_selector.value = selected_file_name; // Update the file selector with the uploaded file name
         document.getElementById("selected_file").style.display = "none"; // Hide the selected file input
     });
-
-    let selected_file_name = "";
-    let selected_file_entry = 0;
 
     const selected_file_element = $("selected_file");
 

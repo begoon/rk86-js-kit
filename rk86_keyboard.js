@@ -3,6 +3,31 @@ import { fromHex, hex8 } from "./hex.js";
 export class Keyboard {
     constructor() {
         this.reset();
+
+        this.keydown = (code) => {
+            // SHIFT
+            if (code === "ShiftLeft" || code === "ShiftRight") this.modifiers &= ~SS;
+            // CTRL
+            if (code === "ControlLeft") this.modifiers &= ~US;
+            // F10
+            if (code === "F10") this.modifiers &= ~RL;
+            const key = Keyboard.key_table[code];
+            if (key) this.state[key[0]] &= ~key[1];
+        };
+
+        this.keyup = (code) => {
+            // SHIFT
+            if (code === "ShiftLeft" || code === "ShiftRight") this.modifiers |= SS;
+            // CTRL
+            if (code === "ControlLeft") this.modifiers |= US;
+            // F10
+            if (code === "F10") this.modifiers |= RL;
+            const key = Keyboard.key_table[code];
+            if (key) this.state[key[0]] |= key[1];
+        };
+
+        this.onkeydown = (code) => this.keydown(code);
+        this.onkeyup = (code) => this.keyup(code);
     }
 
     reset() {
@@ -21,36 +46,6 @@ export class Keyboard {
     import(snapshot) {
         this.state = snapshot.state.map(fromHex);
         this.modifiers = fromHex(snapshot.modifiers);
-    }
-
-    keydown(code) {
-        // SHIFT
-        if (code === "ShiftLeft" || code === "ShiftRight") this.modifiers &= ~SS;
-        // CTRL
-        if (code === "ControlLeft") this.modifiers &= ~US;
-        // F10
-        if (code === "F10") this.modifiers &= ~RL;
-        const key = Keyboard.key_table[code];
-        if (key) this.state[key[0]] &= ~key[1];
-    }
-
-    keyup(code) {
-        // SHIFT
-        if (code === "ShiftLeft" || code === "ShiftRight") this.modifiers |= SS;
-        // CTRL
-        if (code === "ControlLeft") this.modifiers |= US;
-        // F10
-        if (code === "F10") this.modifiers |= RL;
-        const key = Keyboard.key_table[code];
-        if (key) this.state[key[0]] |= key[1];
-    }
-
-    onkeydown(code) {
-        this.keydown(code);
-    }
-
-    onkeyup(code) {
-        this.keyup(code);
     }
 
     static key_table = {
