@@ -27,6 +27,9 @@ test("is_json file", () => {
     expect(parser.is_json([1])).toBe(false);
     expect(parser.is_json(toArray("{}"))).toEqual({});
     expect(parser.is_json(toArray('{"id": "rk86"}'))).toEqual({ id: "rk86" });
+    expect(parser.is_json(toArray("{}"))).toEqual({});
+    expect(parser.is_json(new Uint8Array(toArray("{}")))).toEqual({});
+    expect(parser.is_json(new Uint8Array(toArray('{"a": 1}')))).toEqual({ a: 1 });
 });
 
 test("convert multiline line with signature", () => {

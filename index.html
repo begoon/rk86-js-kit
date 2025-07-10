@@ -77,6 +77,12 @@
                 <button id="fullscreen" class="icon" data-text="Полноэкранный режим">
                     <img class="icon" src="i/fullscreen.svg" />
                 </button>
+                <button id="keyboard" class="icon" data-text="Клавиатура">
+                    <img class="icon" src="i/keyboard.svg" />
+                </button>
+                <button id="help" class="icon" data-text="Помощь">
+                    <img class="icon" src="i/help.svg" />
+                </button>
                 <!-- Кнопка справа -->
                 <div style="margin-left: auto; display: flex; align-items: center; gap: 4px">
                     <button id="tape" class="icon" data-text="Запись на ленту">
@@ -110,10 +116,10 @@
                     <button id="screenshot" class="icon" data-text="Снимок экрана">
                         <img class="icon" src="i/screenshot.svg" />
                     </button>
-                    <button id="memory" class="icon" data-text="Сохранить память в файл">
+                    <button id="memory_snapshot" class="icon" data-text="Сохранить память в файл">
                         <img class="icon" src="i/memory.svg" />
                     </button>
-                    <button id="snapshot" class="icon" data-text="Сохранить полное состояние">
+                    <button id="emulator_snapshot" class="icon" data-text="Сохранить полное состояние">
                         <img class="icon" src="i/snapshot.svg" />
                     </button>
                     <button id="terminal_toggle" class="icon" data-text="Консоль">
@@ -262,12 +268,23 @@
                             border-radius: 4px;
                         }
                     </style>
-                    <div id="shortcuts-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px">
+                    <div id="shortcuts-panel" style="display: grid; grid-template-columns: repeat(2, 1fr)">
                         <style>
-                            #shortcuts-grid div {
+                            #shortcuts-panel div {
                                 padding: 4px;
                                 white-space: nowrap;
                                 text-align: left;
+                                display: grid;
+                                grid-template-columns: 1.4em auto;
+                            }
+                            #shortcuts-panel mark {
+                                background-color: #ffcc00;
+                                color: black;
+                                padding: 2px 4px;
+                                border-radius: 4px;
+                                text-align: center;
+                                margin-right: 4px;
+                                text-transform: uppercase;
                             }
                         </style>
                         <!-- --- -->
@@ -282,6 +299,7 @@
                         <div><mark>r</mark> - перезапустить эмулятор</div>
                         <div><mark>s</mark> - звук</div>
                         <div><mark>f</mark> - полноэкранный режим</div>
+                        <div><mark>w</mark> - сохранить состояние эмулятора</div>
                     </div>
                 </div>
             </div>
@@ -289,7 +307,7 @@
                 id="disassembler_panel"
                 tabindex="0"
                 style="
-                    position: absolute;
+                    position: fixed;
                     bottom: 0;
                     right: 0;
                     width: fit-content;
@@ -337,7 +355,7 @@
                     id="terminal_panel"
                     tabindex="0"
                     style="
-                        position: absolute;
+                        position: fixed;
                         bottom: 2em;
                         right: 1em;
                         width: fit-content;
@@ -350,24 +368,20 @@
                 ></div>
             </div>
             <div>
-                <iframe
-                    src="./i8080_visualizer.html"
+                <div
                     id="visualizer_panel"
                     tabindex="0"
                     style="
-                        position: absolute;
+                        position: fixed;
                         bottom: 2em;
                         right: 1em;
-                        width: 464px;
-                        height: 334px;
+                        width: fit-content;
+                        height: fit-content;
                         overflow: auto;
-                        border: 1px solid #ccc;
+                        border: 1px solid #ffffff;
                         display: none;
-                        padding: 8px 4px 8px 4px;
-                        background-color: #ccc;
-                        border-radius: 4px;
                     "
-                ></iframe>
+                ></div>
             </div>
         </div>
     </body>

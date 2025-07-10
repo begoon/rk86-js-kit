@@ -81,7 +81,7 @@ export function Runner(machine) {
                     if (this.paused) break;
                 }
                 if (this.machine.ui.visualizer_visible) {
-                    window.visualizer.hit(this.machine.memory.read_raw(this.machine.cpu.pc));
+                    this.machine.ui.visualizer.hit(this.machine.memory.read_raw(this.machine.cpu.pc));
                 }
                 batch_instructions += 1;
             }

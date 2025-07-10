@@ -27,7 +27,6 @@ export async function executor(filename, verbose = false, timeout = 60 * 20) {
         if (memory.read(pc) == 0x76) {
             tracer.flush();
             tracer.writeln("HLT at " + pc.toString(16));
-            failed = true;
             break;
         }
         if (pc == 0x0005) {

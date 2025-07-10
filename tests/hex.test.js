@@ -7,6 +7,9 @@ test("hex8", () => {
     expect(hex8(0xff)).toBe("FF");
     expect(hex8(0xe6)).toBe("E6");
     expect(hex8(0xaabb)).toBe("BB");
+
+    expect(hex8(0, "0x")).toBe("0x00");
+    expect(hex8(0xff, "$")).toBe("$FF");
 });
 
 test("hex16", () => {
@@ -14,6 +17,9 @@ test("hex16", () => {
     expect(hex16(0xffff)).toBe("FFFF");
     expect(hex16(0xc0de)).toBe("C0DE");
     expect(hex16(0xbeefbeef)).toBe("BEEF");
+
+    expect(hex16(0, "0x")).toBe("0x0000");
+    expect(hex16(0xffff, "$")).toBe("$FFFF");
 });
 
 test("hexArray", () => {

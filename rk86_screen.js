@@ -15,8 +15,8 @@ export class Screen {
         this.cursor_height = 1;
         this.cursor_offset_white = 27;
 
-        this.scale_x = 1;
-        this.scale_y = 1;
+        this.scale_x = 2;
+        this.scale_y = 2;
 
         this.width = 78;
         this.height = 30;

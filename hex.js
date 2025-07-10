@@ -1,13 +1,13 @@
-function hex(v) {
+function hex(v, prefix) {
     return v.toString(16).toUpperCase();
 }
 
-export function hex8(v) {
-    return hex(v & 0xff).padStart(2, "0");
+export function hex8(v, prefix) {
+    return (prefix ? prefix : "") + hex(v & 0xff, prefix).padStart(2, "0");
 }
 
-export function hex16(v) {
-    return hex(v & 0xffff).padStart(4, "0");
+export function hex16(v, prefix) {
+    return (prefix ? prefix : "") + hex(v & 0xffff, prefix).padStart(4, "0");
 }
 
 export function hexArray(array) {

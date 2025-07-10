@@ -1,384 +1,400 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
     <head>
-        <script src="i8080_visualizer.js"></script>
-        <title>Intel 8080 opcodes</title>
+        <title>Intel 8080</title>
         <meta http-equiv="content-type" content="text/html" />
-        <style type="text/css">
-            html,
-            body {
-                margin: 0px;
-                padding: 0px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            table.withborder {
-                border-width: 0px;
-                border-style: solid;
-                border-color: black;
-                border-collapse: collapse;
-            }
-            td.withborder {
-                border-width: 1px;
-                border-style: solid;
-                border-color: black;
-                border-collapse: collapse;
-            }
-            a:link {
-                text-decoration: none;
-                color: #2018a0;
-            }
-            a:visited {
-                text-decoration: none;
-                color: #2018a0;
-            }
-            a:active {
-                text-decoration: none;
-                color: #2018a0;
-            }
-            a:hover {
-                text-decoration: none;
-                color: #4030ff;
-            }
-            sub {
-                font-size: 6pt;
-            }
-            sup {
-                font-size: 6pt;
-            }
-            hr {
-                height: 1px;
-                color: black;
-            }
-        </style>
     </head>
 
-    <body bgcolor="#dfdfdf" onload="main()">
-        <table id="opcodes" cellspacing="0" cellpadding="0" class="withborder" bgcolor="#bfbfbf" width="460px">
-            <tr style="font-family: monospace; font-size: 6pt" align="center" bgcolor="#9f9f9f">
-                <td class="withborder"></td>
-                <td class="withborder"><b>x0</b></td>
-                <td class="withborder"><b>x1</b></td>
-                <td class="withborder"><b>x2</b></td>
-                <td class="withborder"><b>x3</b></td>
-                <td class="withborder"><b>x4</b></td>
-                <td class="withborder"><b>x5</b></td>
-                <td class="withborder"><b>x6</b></td>
-                <td class="withborder"><b>x7</b></td>
-                <td class="withborder"><b>x8</b></td>
-                <td class="withborder"><b>x9</b></td>
-                <td class="withborder"><b>xA</b></td>
-                <td class="withborder"><b>xB</b></td>
-                <td class="withborder"><b>xC</b></td>
-                <td class="withborder"><b>xD</b></td>
-                <td class="withborder"><b>xE</b></td>
-                <td class="withborder"><b>xF</b></td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>0x</b></td>
-                <td class="withborder" bgcolor="#ff99cc">NOP</td>
-                <td class="withborder" bgcolor="#ccffcc">LXI B,d16</td>
-                <td class="withborder" bgcolor="#ccccff">STAX B</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">INR B</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />B</td>
-                <td class="withborder" bgcolor="#ccccff">MVI B,d8</td>
-                <td class="withborder" bgcolor="#ffff99">RLC</td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ffcccc">DAD<br />B</td>
-                <td class="withborder" bgcolor="#ccccff">LDAX B</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">INR C</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />C</td>
-                <td class="withborder" bgcolor="#ccccff">MVI C,d8</td>
-                <td class="withborder" bgcolor="#ffff99">RRC</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>1x</b></td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ccffcc">LXI D,d16</td>
-                <td class="withborder" bgcolor="#ccccff">STAX D</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">INR D</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />D</td>
-                <td class="withborder" bgcolor="#ccccff">MVI D,d8</td>
-                <td class="withborder" bgcolor="#ffff99">RAL</td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ffcccc">DAD<br />D</td>
-                <td class="withborder" bgcolor="#ccccff">LDAX D</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">INR E</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />E</td>
-                <td class="withborder" bgcolor="#ccccff">MVI E,d8</td>
-                <td class="withborder" bgcolor="#ffff99">RAR</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>2x</b></td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ccffcc">LXI H,d16</td>
-                <td class="withborder" bgcolor="#ccffcc">SHLD a16</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">INR H</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />H</td>
-                <td class="withborder" bgcolor="#ccccff">MVI H,d8</td>
-                <td class="withborder" bgcolor="#ffff99">DAA</td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ffcccc">DAD<br />H</td>
-                <td class="withborder" bgcolor="#ccffcc">LHLD a16</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">INR L</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />L</td>
-                <td class="withborder" bgcolor="#ccccff">MVI L,d8</td>
-                <td class="withborder" bgcolor="#ffff99">CMA</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>3x</b></td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ccffcc">LXI SP,d16</td>
-                <td class="withborder" bgcolor="#ccccff">STA a16</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />SP</td>
-                <td class="withborder" bgcolor="#ffff99">INR M</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />M</td>
-                <td class="withborder" bgcolor="#ccccff">MVI M,d8</td>
-                <td class="withborder" bgcolor="#ffff99">STC</td>
-                <td class="withborder" bgcolor="#ff99cc">*NOP</td>
-                <td class="withborder" bgcolor="#ffcccc">DAD<br />SP</td>
-                <td class="withborder" bgcolor="#ccccff">LDA a16</td>
-                <td class="withborder" bgcolor="#ffcccc">DCR<br />SP</td>
-                <td class="withborder" bgcolor="#ffff99">INR A</td>
-                <td class="withborder" bgcolor="#ffff99">DCR<br />A</td>
-                <td class="withborder" bgcolor="#ccccff">MVI A,d8</td>
-                <td class="withborder" bgcolor="#ffff99">CMC</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>4x</b></td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV B,A</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV C,A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>5x</b></td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV D,A</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV E,A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>6x</b></td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV H,A</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV L,A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>7x</b></td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,L</td>
-                <td class="withborder" bgcolor="#ff99cc">HLT</td>
-                <td class="withborder" bgcolor="#ccccff">MOV M,A</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,B</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,C</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,D</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,E</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,H</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,L</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,M</td>
-                <td class="withborder" bgcolor="#ccccff">MOV A,A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>8x</b></td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">ADD<br />A</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">ADC<br />A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>9x</b></td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">SUB<br />A</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">SBB<br />A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>Ax</b></td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">ANA<br />A</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">XRA<br />A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>Bx</b></td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">ORA<br />A</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />C</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />E</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />L</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />M</td>
-                <td class="withborder" bgcolor="#ffff99">CMP<br />A</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>Cx</b></td>
-                <td class="withborder" bgcolor="#ffcc99">RNZ</td>
-                <td class="withborder" bgcolor="#ccffcc">POP<br />B</td>
-                <td class="withborder" bgcolor="#ffcc99">JNZ a16</td>
-                <td class="withborder" bgcolor="#ffcc99">JMP a16</td>
-                <td class="withborder" bgcolor="#ffcc99">CNZ a16</td>
-                <td class="withborder" bgcolor="#ccffcc">PUSH<br />B</td>
-                <td class="withborder" bgcolor="#ffff99">ADI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />0</td>
-                <td class="withborder" bgcolor="#ffcc99">RZ</td>
-                <td class="withborder" bgcolor="#ffcc99">RET</td>
-                <td class="withborder" bgcolor="#ffcc99">JZ a16</td>
-                <td class="withborder" bgcolor="#ffcc99">*JMP a16</td>
-                <td class="withborder" bgcolor="#ffcc99">CZ a16</td>
-                <td class="withborder" bgcolor="#ffcc99">CALL a16</td>
-                <td class="withborder" bgcolor="#ffff99">ACI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />1</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>Dx</b></td>
-                <td class="withborder" bgcolor="#ffcc99">RNC</td>
-                <td class="withborder" bgcolor="#ccffcc">POP<br />D</td>
-                <td class="withborder" bgcolor="#ffcc99">JNC a16</td>
-                <td class="withborder" bgcolor="#ff99cc">OUT d8</td>
-                <td class="withborder" bgcolor="#ffcc99">CNC a16</td>
-                <td class="withborder" bgcolor="#ccffcc">PUSH<br />D</td>
-                <td class="withborder" bgcolor="#ffff99">SUI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />2</td>
-                <td class="withborder" bgcolor="#ffcc99">RC</td>
-                <td class="withborder" bgcolor="#ffcc99">*RET</td>
-                <td class="withborder" bgcolor="#ffcc99">JC a16</td>
-                <td class="withborder" bgcolor="#ff99cc">IN<br />d8</td>
-                <td class="withborder" bgcolor="#ffcc99">CC a16</td>
-                <td class="withborder" bgcolor="#ffcc99">*CALL a16</td>
-                <td class="withborder" bgcolor="#ffff99">SBI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />3</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>Ex</b></td>
-                <td class="withborder" bgcolor="#ffcc99">RPO</td>
-                <td class="withborder" bgcolor="#ccffcc">POP<br />H</td>
-                <td class="withborder" bgcolor="#ffcc99">JPO a16</td>
-                <td class="withborder" bgcolor="#ccffcc">XTHL</td>
-                <td class="withborder" bgcolor="#ffcc99">CPO a16</td>
-                <td class="withborder" bgcolor="#ccffcc">PUSH<br />H</td>
-                <td class="withborder" bgcolor="#ffff99">ANI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />4</td>
-                <td class="withborder" bgcolor="#ffcc99">RPE</td>
-                <td class="withborder" bgcolor="#ffcc99">PCHL</td>
-                <td class="withborder" bgcolor="#ffcc99">JPE a16</td>
-                <td class="withborder" bgcolor="#ccffcc">XCHG</td>
-                <td class="withborder" bgcolor="#ffcc99">CPE a16</td>
-                <td class="withborder" bgcolor="#ffcc99">*CALL a16</td>
-                <td class="withborder" bgcolor="#ffff99">XRI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />5</td>
-            </tr>
-            <tr style="font-family: monospace; font-size: 6pt" align="center">
-                <td class="withborder" bgcolor="#9f9f9f"><b>Fx</b></td>
-                <td class="withborder" bgcolor="#ffcc99">RP</td>
-                <td class="withborder" bgcolor="#ccffcc">POP<br />PSW</td>
-                <td class="withborder" bgcolor="#ffcc99">JP a16</td>
-                <td class="withborder" bgcolor="#ff99cc">DI</td>
-                <td class="withborder" bgcolor="#ffcc99">CP a16</td>
-                <td class="withborder" bgcolor="#ccffcc">PUSH<br />PSW</td>
-                <td class="withborder" bgcolor="#ffff99">ORI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />6</td>
-                <td class="withborder" bgcolor="#ffcc99">RM</td>
-                <td class="withborder" bgcolor="#ccffcc">SPHL</td>
-                <td class="withborder" bgcolor="#ffcc99">JM a16</td>
-                <td class="withborder" bgcolor="#ff99cc">EI</td>
-                <td class="withborder" bgcolor="#ffcc99">CM a16</td>
-                <td class="withborder" bgcolor="#ffcc99">*CALL a16</td>
-                <td class="withborder" bgcolor="#ffff99">CPI d8</td>
-                <td class="withborder" bgcolor="#ffcc99">RST<br />7</td>
-            </tr>
-        </table>
+    <body>
+        <div id="visualizer_panel">
+            <style type="text/css">
+                #visualizer_panel table {
+                    border-width: 0px;
+                    border-style: solid;
+                    border-color: black;
+                    border-collapse: collapse;
+                }
+                #visualizer_panel tr {
+                    text-align: center;
+                }
+                #visualizer_panel tr:first-child {
+                    text-align: center;
+                    background-color: #9f9f9f;
+                }
+                #visualizer_panel td:first-child {
+                    background-color: #9f9f9f;
+                }
+                #visualizer_panel td {
+                    padding: 0 2px;
+
+                    border: 1px solid black;
+                    border-collapse: collapse;
+
+                    color: #000000;
+                    font-family: monospace;
+                    font-size: 6pt;
+                }
+                #visualizer_panel td.active {
+                    background-color: red;
+                }
+                #visualizer_panel i {
+                    font-style: normal;
+                    display: block;
+                }
+                #visualizer_panel .mem {
+                    background-color: #ccccff;
+                }
+                #visualizer_panel .mem16 {
+                    background-color: #ccffcc;
+                }
+                #visualizer_panel .alu {
+                    background-color: #ffff99;
+                }
+                #visualizer_panel .alu16 {
+                    background-color: #ffcccc;
+                }
+                #visualizer_panel .jmp {
+                    background-color: #ffcc99;
+                }
+                #visualizer_panel .io {
+                    background-color: #33cccc;
+                }
+                #visualizer_panel .nop {
+                    background-color: #ff99cc;
+                }
+                #visualizer_panel .hlt {
+                    background-color: #eecc22;
+                }
+            </style>
+            <table>
+                <tr>
+                    <td></td>
+                    <td>x0</td>
+                    <td>x1</td>
+                    <td>x2</td>
+                    <td>x3</td>
+                    <td>x4</td>
+                    <td>x5</td>
+                    <td>x6</td>
+                    <td>x7</td>
+                    <td>x8</td>
+                    <td>x9</td>
+                    <td>xA</td>
+                    <td>xB</td>
+                    <td>xC</td>
+                    <td>xD</td>
+                    <td>xE</td>
+                    <td>xF</td>
+                </tr>
+                <tr>
+                    <td>0x</td>
+                    <td class="nop"><i>NOP</i></td>
+                    <td class="mem16"><i>LXI</i>B,d16</td>
+                    <td class="mem"><i>STAX</i>B</td>
+                    <td class="alu16"><i>DCR</i>B</td>
+                    <td class="alu"><i>INR</i>B</td>
+                    <td class="alu"><i>DCR</i>B</td>
+                    <td class="mem"><i>MVI</i>B,d8</td>
+                    <td class="alu"><i>RLC</i></td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="alu16"><i>DAD</i>B</td>
+                    <td class="mem"><i>LDAX</i>B</td>
+                    <td class="alu16"><i>DCR</i>B</td>
+                    <td class="alu"><i>INR</i>C</td>
+                    <td class="alu"><i>DCR</i>C</td>
+                    <td class="mem"><i>MVI</i>C,d8</td>
+                    <td class="alu"><i>RRC</i></td>
+                </tr>
+                <tr>
+                    <td>1x</td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="mem16"><i>LXI</i>D,d16</td>
+                    <td class="mem"><i>STAX</i>D</td>
+                    <td class="alu16"><i>DCR</i>D</td>
+                    <td class="alu"><i>INR</i>D</td>
+                    <td class="alu"><i>DCR</i>D</td>
+                    <td class="mem"><i>MVI</i>D,d8</td>
+                    <td class="alu"><i>RAL</i></td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="alu16"><i>DAD</i>D</td>
+                    <td class="mem"><i>LDAX</i>D</td>
+                    <td class="alu16"><i>DCR</i>D</td>
+                    <td class="alu"><i>INR</i>E</td>
+                    <td class="alu"><i>DCR</i>E</td>
+                    <td class="mem"><i>MVI</i>E,d8</td>
+                    <td class="alu"><i>RAR</i></td>
+                </tr>
+                <tr>
+                    <td>2x</td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="mem16"><i>LXI</i>H,d16</td>
+                    <td class="mem16"><i>SHLD</i>a16</td>
+                    <td class="alu16"><i>DCR</i>H</td>
+                    <td class="alu"><i>INR</i>H</td>
+                    <td class="alu"><i>DCR</i>H</td>
+                    <td class="mem"><i>MVI</i>H,d8</td>
+                    <td class="alu"><i>DAA</i></td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="alu16"><i>DAD</i>H</td>
+                    <td class="mem16"><i>LHLD</i>a16</td>
+                    <td class="alu16"><i>DCR</i>H</td>
+                    <td class="alu"><i>INR</i>L</td>
+                    <td class="alu"><i>DCR</i>L</td>
+                    <td class="mem"><i>MVI</i>L,d8</td>
+                    <td class="alu"><i>CMA</i></td>
+                </tr>
+                <tr>
+                    <td>3x</td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="mem16"><i>LXI</i>SP,d16</td>
+                    <td class="mem"><i>STA</i>a16</td>
+                    <td class="alu16"><i>DCR</i>SP</td>
+                    <td class="alu"><i>INR</i>M</td>
+                    <td class="alu"><i>DCR</i>M</td>
+                    <td class="mem"><i>MVI</i>M,d8</td>
+                    <td class="alu"><i>STC</i></td>
+                    <td class="nop"><i>*NOP</i></td>
+                    <td class="alu16"><i>DAD</i>SP</td>
+                    <td class="mem"><i>LDA</i>a16</td>
+                    <td class="alu16"><i>DCR</i>SP</td>
+                    <td class="alu"><i>INR</i>A</td>
+                    <td class="alu"><i>DCR</i>A</td>
+                    <td class="mem"><i>MVI</i>A,d8</td>
+                    <td class="alu"><i>CMC</i></td>
+                </tr>
+                <tr>
+                    <td>4x</td>
+                    <td class="mem"><i>MOV</i>B,B</td>
+                    <td class="mem"><i>MOV</i>B,C</td>
+                    <td class="mem"><i>MOV</i>B,D</td>
+                    <td class="mem"><i>MOV</i>B,E</td>
+                    <td class="mem"><i>MOV</i>B,H</td>
+                    <td class="mem"><i>MOV</i>B,L</td>
+                    <td class="mem"><i>MOV</i>B,M</td>
+                    <td class="mem"><i>MOV</i>B,A</td>
+                    <td class="mem"><i>MOV</i>C,B</td>
+                    <td class="mem"><i>MOV</i>C,C</td>
+                    <td class="mem"><i>MOV</i>C,D</td>
+                    <td class="mem"><i>MOV</i>C,E</td>
+                    <td class="mem"><i>MOV</i>C,H</td>
+                    <td class="mem"><i>MOV</i>C,L</td>
+                    <td class="mem"><i>MOV</i>C,M</td>
+                    <td class="mem"><i>MOV</i>C,A</td>
+                </tr>
+                <tr>
+                    <td>5x</td>
+                    <td class="mem"><i>MOV</i>D,B</td>
+                    <td class="mem"><i>MOV</i>D,C</td>
+                    <td class="mem"><i>MOV</i>D,D</td>
+                    <td class="mem"><i>MOV</i>D,E</td>
+                    <td class="mem"><i>MOV</i>D,H</td>
+                    <td class="mem"><i>MOV</i>D,L</td>
+                    <td class="mem"><i>MOV</i>D,M</td>
+                    <td class="mem"><i>MOV</i>D,A</td>
+                    <td class="mem"><i>MOV</i>E,B</td>
+                    <td class="mem"><i>MOV</i>E,C</td>
+                    <td class="mem"><i>MOV</i>E,D</td>
+                    <td class="mem"><i>MOV</i>E,E</td>
+                    <td class="mem"><i>MOV</i>E,H</td>
+                    <td class="mem"><i>MOV</i>E,L</td>
+                    <td class="mem"><i>MOV</i>E,M</td>
+                    <td class="mem"><i>MOV</i>E,A</td>
+                </tr>
+                <tr>
+                    <td>6x</td>
+                    <td class="mem"><i>MOV</i>H,B</td>
+                    <td class="mem"><i>MOV</i>H,C</td>
+                    <td class="mem"><i>MOV</i>H,D</td>
+                    <td class="mem"><i>MOV</i>H,E</td>
+                    <td class="mem"><i>MOV</i>H,H</td>
+                    <td class="mem"><i>MOV</i>H,L</td>
+                    <td class="mem"><i>MOV</i>H,M</td>
+                    <td class="mem"><i>MOV</i>H,A</td>
+                    <td class="mem"><i>MOV</i>L,B</td>
+                    <td class="mem"><i>MOV</i>L,C</td>
+                    <td class="mem"><i>MOV</i>L,D</td>
+                    <td class="mem"><i>MOV</i>L,E</td>
+                    <td class="mem"><i>MOV</i>L,H</td>
+                    <td class="mem"><i>MOV</i>L,L</td>
+                    <td class="mem"><i>MOV</i>L,M</td>
+                    <td class="mem"><i>MOV</i>L,A</td>
+                </tr>
+                <tr>
+                    <td>7x</td>
+                    <td class="mem"><i>MOV</i>M,B</td>
+                    <td class="mem"><i>MOV</i>M,C</td>
+                    <td class="mem"><i>MOV</i>M,D</td>
+                    <td class="mem"><i>MOV</i>M,E</td>
+                    <td class="mem"><i>MOV</i>M,H</td>
+                    <td class="mem"><i>MOV</i>M,L</td>
+                    <td class="hlt"><i>HLT</i></td>
+                    <td class="mem"><i>MOV</i>M,A</td>
+                    <td class="mem"><i>MOV</i>A,B</td>
+                    <td class="mem"><i>MOV</i>A,C</td>
+                    <td class="mem"><i>MOV</i>A,D</td>
+                    <td class="mem"><i>MOV</i>A,E</td>
+                    <td class="mem"><i>MOV</i>A,H</td>
+                    <td class="mem"><i>MOV</i>A,L</td>
+                    <td class="mem"><i>MOV</i>A,M</td>
+                    <td class="mem"><i>MOV</i>A,A</td>
+                </tr>
+                <tr>
+                    <td>8x</td>
+                    <td class="alu"><i>ADD</i>B</td>
+                    <td class="alu"><i>ADD</i>C</td>
+                    <td class="alu"><i>ADD</i>D</td>
+                    <td class="alu"><i>ADD</i>E</td>
+                    <td class="alu"><i>ADD</i>H</td>
+                    <td class="alu"><i>ADD</i>L</td>
+                    <td class="alu"><i>ADD</i>M</td>
+                    <td class="alu"><i>ADD</i>A</td>
+                    <td class="alu"><i>ADC</i>B</td>
+                    <td class="alu"><i>ADC</i>C</td>
+                    <td class="alu"><i>ADC</i>D</td>
+                    <td class="alu"><i>ADC</i>E</td>
+                    <td class="alu"><i>ADC</i>H</td>
+                    <td class="alu"><i>ADC</i>L</td>
+                    <td class="alu"><i>ADC</i>M</td>
+                    <td class="alu"><i>ADC</i>A</td>
+                </tr>
+                <tr>
+                    <td>9x</td>
+                    <td class="alu"><i>SUB</i>B</td>
+                    <td class="alu"><i>SUB</i>C</td>
+                    <td class="alu"><i>SUB</i>D</td>
+                    <td class="alu"><i>SUB</i>E</td>
+                    <td class="alu"><i>SUB</i>H</td>
+                    <td class="alu"><i>SUB</i>L</td>
+                    <td class="alu"><i>SUB</i>M</td>
+                    <td class="alu"><i>SUB</i>A</td>
+                    <td class="alu"><i>SBB</i>B</td>
+                    <td class="alu"><i>SBB</i>C</td>
+                    <td class="alu"><i>SBB</i>D</td>
+                    <td class="alu"><i>SBB</i>E</td>
+                    <td class="alu"><i>SBB</i>H</td>
+                    <td class="alu"><i>SBB</i>L</td>
+                    <td class="alu"><i>SBB</i>M</td>
+                    <td class="alu"><i>SBB</i>A</td>
+                </tr>
+                <tr>
+                    <td>Ax</td>
+                    <td class="alu"><i>ANA</i>B</td>
+                    <td class="alu"><i>ANA</i>C</td>
+                    <td class="alu"><i>ANA</i>D</td>
+                    <td class="alu"><i>ANA</i>E</td>
+                    <td class="alu"><i>ANA</i>H</td>
+                    <td class="alu"><i>ANA</i>L</td>
+                    <td class="alu"><i>ANA</i>M</td>
+                    <td class="alu"><i>ANA</i>A</td>
+                    <td class="alu"><i>XRA</i>B</td>
+                    <td class="alu"><i>XRA</i>C</td>
+                    <td class="alu"><i>XRA</i>D</td>
+                    <td class="alu"><i>XRA</i>E</td>
+                    <td class="alu"><i>XRA</i>H</td>
+                    <td class="alu"><i>XRA</i>L</td>
+                    <td class="alu"><i>XRA</i>M</td>
+                    <td class="alu"><i>XRA</i>A</td>
+                </tr>
+                <tr>
+                    <td>Bx</td>
+                    <td class="alu"><i>ORA</i>B</td>
+                    <td class="alu"><i>ORA</i>C</td>
+                    <td class="alu"><i>ORA</i>D</td>
+                    <td class="alu"><i>ORA</i>E</td>
+                    <td class="alu"><i>ORA</i>H</td>
+                    <td class="alu"><i>ORA</i>L</td>
+                    <td class="alu"><i>ORA</i>M</td>
+                    <td class="alu"><i>ORA</i>A</td>
+                    <td class="alu"><i>CMP</i>B</td>
+                    <td class="alu"><i>CMP</i>C</td>
+                    <td class="alu"><i>CMP</i>D</td>
+                    <td class="alu"><i>CMP</i>E</td>
+                    <td class="alu"><i>CMP</i>H</td>
+                    <td class="alu"><i>CMP</i>L</td>
+                    <td class="alu"><i>CMP</i>M</td>
+                    <td class="alu"><i>CMP</i>A</td>
+                </tr>
+                <tr>
+                    <td>Cx</td>
+                    <td class="jmp"><i>RNZ</i></td>
+                    <td class="mem16"><i>POP</i>B</td>
+                    <td class="jmp"><i>JNZ</i>a16</td>
+                    <td class="jmp"><i>JMP</i>a16</td>
+                    <td class="jmp"><i>CNZ</i>a16</td>
+                    <td class="mem16"><i>PUSH</i>B</td>
+                    <td class="alu"><i>ADI</i>d8</td>
+                    <td class="jmp"><i>RST</i>0</td>
+                    <td class="jmp"><i>RZ</i></td>
+                    <td class="jmp"><i>RET</i></td>
+                    <td class="jmp"><i>JZ</i>a16</td>
+                    <td class="jmp"><i>*JMP</i>a16</td>
+                    <td class="jmp"><i>CZ</i>a16</td>
+                    <td class="jmp"><i>CALL</i>a16</td>
+                    <td class="alu"><i>ACI</i>d8</td>
+                    <td class="jmp"><i>RST</i>1</td>
+                </tr>
+                <tr>
+                    <td>Dx</td>
+                    <td class="jmp"><i>RNC</i></td>
+                    <td class="mem16"><i>POP</i>D</td>
+                    <td class="jmp"><i>JNC</i>a16</td>
+                    <td class="io"><i>OUT</i>d8</td>
+                    <td class="jmp"><i>CNC</i>a16</td>
+                    <td class="mem16"><i>PUSH</i>D</td>
+                    <td class="alu"><i>SUI</i>d8</td>
+                    <td class="jmp"><i>RST</i>2</td>
+                    <td class="jmp"><i>RC</i></td>
+                    <td class="jmp"><i>*RET</i></td>
+                    <td class="jmp"><i>JC</i>a16</td>
+                    <td class="io"><i>IN</i>d8</td>
+                    <td class="jmp"><i>CC</i>a16</td>
+                    <td class="jmp"><i>*CALL</i>a16</td>
+                    <td class="alu"><i>SBI</i>d8</td>
+                    <td class="jmp"><i>RST</i>3</td>
+                </tr>
+                <tr>
+                    <td>Ex</td>
+                    <td class="jmp"><i>RPO</i></td>
+                    <td class="mem16"><i>POP</i>H</td>
+                    <td class="jmp"><i>JPO</i>a16</td>
+                    <td class="mem16"><i>XTHL</i></td>
+                    <td class="jmp"><i>CPO</i>a16</td>
+                    <td class="mem16"><i>PUSH</i>H</td>
+                    <td class="alu"><i>ANI</i>d8</td>
+                    <td class="jmp"><i>RST</i>4</td>
+                    <td class="jmp"><i>RPE</i></td>
+                    <td class="jmp"><i>PCHL</i></td>
+                    <td class="jmp"><i>JPE</i>a16</td>
+                    <td class="mem16"><i>XCHG</i></td>
+                    <td class="jmp"><i>CPE</i>a16</td>
+                    <td class="jmp"><i>*CALL</i>a16</td>
+                    <td class="alu"><i>XRI</i>d8</td>
+                    <td class="jmp"><i>RST</i>5</td>
+                </tr>
+                <tr>
+                    <td>Fx</td>
+                    <td class="jmp"><i>RP</i></td>
+                    <td class="mem16"><i>POP</i>PSW</td>
+                    <td class="jmp"><i>JP</i>a16</td>
+                    <td class="io"><i>DI</i></td>
+                    <td class="jmp"><i>CP</i>a16</td>
+                    <td class="mem16"><i>PUSH</i>PSW</td>
+                    <td class="alu"><i>ORI</i>d8</td>
+                    <td class="jmp"><i>RST</i>6</td>
+                    <td class="jmp"><i>RM</i></td>
+                    <td class="mem16"><i>SPHL</i></td>
+                    <td class="jmp"><i>JM</i>a16</td>
+                    <td class="io"><i>EI</i></td>
+                    <td class="jmp"><i>CM</i>a16</td>
+                    <td class="jmp"><i>*CALL</i>a16</td>
+                    <td class="alu"><i>CPI</i>d8</td>
+                    <td class="jmp"><i>RST</i>7</td>
+                </tr>
+            </table>
+            <script src="i8080_visualizer.js"></script>
+        </div>
     </body>
+    <script>
+        main();
+    </script>
 </html>

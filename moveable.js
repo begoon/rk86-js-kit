@@ -4,13 +4,7 @@ const make = (element) => {
         let offsetY = 0;
         let isDragging = false;
 
-        element.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            offsetX = e.clientX - element.offsetLeft;
-            offsetY = e.clientY - element.offsetTop;
-        });
-
-        element.addEventListener("mousemove", (e) => {
+        const onMouseMove = (e) => {
             if (!isDragging) return;
 
             const left = e.clientX - offsetX;
@@ -21,11 +15,34 @@ const make = (element) => {
 
             if (left < 0 || left + element.offsetWidth > width - 1) return;
             if (top < 0 || top + element.offsetHeight > height - 1) return;
+
             element.style.left = left + "px";
             element.style.top = top + "px";
-        });
+        };
 
-        element.addEventListener("mouseup", () => (isDragging = false));
+        const onMouseUp = () => {
+            isDragging = false;
+
+            element.style.cursor = "default";
+            document.body.style.userSelect = "";
+
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseUp);
+        };
+
+        element.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            isDragging = true;
+
+            offsetX = e.clientX - element.offsetLeft;
+            offsetY = e.clientY - element.offsetTop;
+
+            element.style.cursor = "move";
+            document.body.style.userSelect = "none";
+
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+        });
     };
 };
 
