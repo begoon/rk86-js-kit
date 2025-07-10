@@ -15,8 +15,8 @@ export class Screen {
         this.cursor_height = 1;
         this.cursor_offset_white = 27;
 
-        this.scale_x = 2;
-        this.scale_y = 2;
+        this.scale_x = 1;
+        this.scale_y = 1;
 
         this.width = 78;
         this.height = 30;
@@ -197,8 +197,17 @@ export class Screen {
         const canvas = this.machine.ui.canvas;
         const rect = canvas.getBoundingClientRect();
 
-        const x = Math.floor((event.clientX - rect.left) / (this.char_width * this.scale_x));
-        const y = Math.floor((event.clientY - rect.top) / ((this.char_height + this.char_height_gap) * this.scale_y));
+        // Compute scaling factors between CSS size and actual canvas size
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        // Map mouse coordinates from CSS space to canvas space
+        const mouseX = (event.clientX - rect.left) * scaleX;
+        const mouseY = (event.clientY - rect.top) * scaleY;
+
+        // Convert to character grid position
+        const x = Math.floor(mouseX / (this.char_width * this.scale_x));
+        const y = Math.floor(mouseY / ((this.char_height + this.char_height_gap) * this.scale_y));
 
         this.light_pen_x = x;
         this.light_pen_y = y;

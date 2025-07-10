@@ -547,18 +547,10 @@ export async function main() {
 
     function execute_commands_loop(sequence, i) {
         const { keyboard } = machine;
-        console.log(keyboard);
         if (i >= sequence.length) return;
         const { keys, duration, action } = sequence[i];
         const call = action === "down" ? keyboard.onkeydown : keyboard.onkeyup;
-        console.log(keys, duration, action, call);
-        const translated_keys = keys.map((key) => translate_key(key));
-        if (action != "pause")
-            keys.forEach((key) => {
-                const x = translate_key(key);
-                console.log(typeof key, key, x);
-                call(x);
-            });
+        if (action != "pause") keys.forEach((key) => call(translate_key(key)));
         setTimeout(() => execute_commands_loop(sequence, i + 1), +duration);
     }
 
