@@ -39,24 +39,21 @@ test("cpu export", () => {
     expect(exported.iff).toBe(1);
 });
 
-// test("cpu import", () => {
-//     const cpu = t.context;
-
-//     const imported = new I8080(new Memory(), undefined);
-//     imported.import(cpu.export());
-
-//     t.is(imported.a(), cpu.a());
-//     t.is(imported.sf, cpu.sf);
-//     t.is(imported.zf, cpu.zf);
-//     t.is(imported.hf, cpu.hf);
-//     t.is(imported.pf, cpu.pf);
-//     t.is(imported.cf, cpu.cf);
-//     t.is(imported.b(), cpu.b());
-//     t.is(imported.c(), cpu.c());
-//     t.is(imported.d(), cpu.d());
-//     t.is(imported.e(), cpu.e());
-//     t.is(imported.h(), cpu.h());
-//     t.is(imported.l(), cpu.l());
-//     t.is(imported.sp, cpu.sp);
-//     t.is(imported.pc, cpu.pc);
-// });
+test("cpu import", () => {
+    const imported = new I8080({});
+    imported.import(cpu.export());
+    expect(imported.a()).toBe(cpu.a());
+    expect(imported.sf).toBe(cpu.sf);
+    expect(imported.zf).toBe(cpu.zf);
+    expect(imported.hf).toBe(cpu.hf);
+    expect(imported.pf).toBe(cpu.pf);
+    expect(imported.cf).toBe(cpu.cf);
+    expect(imported.b()).toBe(cpu.b());
+    expect(imported.c()).toBe(cpu.c());
+    expect(imported.d()).toBe(cpu.d());
+    expect(imported.e()).toBe(cpu.e());
+    expect(imported.h()).toBe(cpu.h());
+    expect(imported.l()).toBe(cpu.l());
+    expect(imported.sp).toBe(cpu.sp);
+    expect(imported.pc).toBe(cpu.pc);
+});
