@@ -28,20 +28,12 @@ export class Screen {
         this.last_cursor_x = 0;
         this.last_cursor_y = 0;
 
-        this.video_memory_base = 0;
-        this.video_memory_size = 0;
-
-        this.cache = [];
-
         this.font = new Image();
         this.font.src = this.machine.font;
 
         this.light_pen_x = 0;
         this.light_pen_y = 0;
         this.light_pen_active = 0;
-
-        this.last_video_memory_base = -1;
-        this.last_video_memory_size = -1;
     }
 
     export() {
@@ -62,6 +54,9 @@ export class Screen {
         };
     }
 
+    /**
+     * @param {Object} snapshot
+     */
     import(snapshot) {
         const h = fromHex;
         this.scale_x = h(snapshot.scale_x);
@@ -93,10 +88,23 @@ export class Screen {
         this.machine.ui.canvas.onmousedown = () => (this.light_pen_active = 1);
     }
 
+    /**
+     * @type {boolean[]}
+     */
+    cache = [];
+
+    /**
+     * @param {number} sz
+     */
     init_cache(sz) {
         for (let i = 0; i < sz; ++i) this.cache[i] = true;
     }
 
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} ch
+     */
     draw_char(x, y, ch) {
         this.ctx.drawImage(
             this.font,
@@ -111,7 +119,16 @@ export class Screen {
         );
     }
 
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {boolean} visible
+     */
     draw_cursor(x, y, visible) {
+        /**
+         *
+         * @param {number} y
+         */
         const cy = (y) => (y * (this.char_height + this.char_height_gap) + this.char_height) * this.scale_y;
         if (this.last_cursor_x !== x || this.last_cursor_y !== y) {
             if (this.last_cursor_state)
@@ -146,13 +163,21 @@ export class Screen {
         this.ctx.imageSmoothingEnabled = false;
     }
 
+    last_width = 0;
+    last_height = 0;
+
+    video_memory_size = 0;
+
+    /**
+     * @param {number} width
+     * @param {number} height
+     */
     set_geometry(width, height) {
         this.width = width;
         this.height = height;
         this.video_memory_size = width * height;
 
         this.machine.ui.update_screen_geometry(this.width, this.height);
-        console.log(`screen geometry: ${width} x ${height}`);
 
         const canvas_width = this.width * this.char_width * this.scale_x;
         const canvas_height = this.height * (this.char_height + this.char_height_gap) * this.scale_y;
@@ -160,24 +185,40 @@ export class Screen {
 
         this.disable_smoothing();
         this.ctx.fillRect(0, 0, canvas_width, canvas_height);
+
+        if (this.last_width === this.width && this.last_height === this.height) return;
+
+        console.log(`установлен размер экрана: ${width} x ${height}`);
+        this.last_width = this.width;
+        this.last_height = this.height;
     }
 
+    video_memory_base = 0;
+    last_video_memory_base = 0;
+
+    /**
+     * @param {number} base
+     */
     set_video_memory(base) {
         this.video_memory_base = base;
         this.init_cache(this.video_memory_size);
 
-        this.machine.ui.update_video_memory_base(this.video_memory_base);
+        this.machine.ui.update_video_memory_address(this.video_memory_base);
 
-        if (
-            this.last_video_memory_base !== this.video_memory_base ||
-            this.last_video_memory_size !== this.video_memory_size
-        ) {
-            console.log(`video memory:`, `${this.video_memory_base.toString(16)}`, `size: ${this.video_memory_size}`);
-            this.last_video_memory_base = this.video_memory_base;
-            this.last_video_memory_size = this.video_memory_size;
-        }
+        if (this.last_video_memory_base === this.video_memory_base) return;
+
+        console.log(
+            `установлена видеопамять с адреса`,
+            `${hex16(this.video_memory_base)}`,
+            `размером ${hex16(this.video_memory_size)}`
+        );
+        this.last_video_memory_base = this.video_memory_base;
     }
 
+    /**
+     * @param {number} x
+     * @param {number} y
+     */
     set_cursor(x, y) {
         this.draw_cursor(this.cursor_x, this.cursor_y, false);
         this.cursor_x = x;
@@ -198,7 +239,7 @@ export class Screen {
                 i += 1;
             }
         }
-        setTimeout(() => this.draw_screen(), Screen.update_rate);
+        setTimeout(() => this.draw_screen(), Screen.#update_rate);
     }
 
     /**
@@ -206,17 +247,14 @@ export class Screen {
      */
     handle_mousemove(event) {
         const canvas = this.machine.ui.canvas;
-        const rect = canvas.getBoundingClientRect();
+        const box = canvas.getBoundingClientRect();
 
-        // Compute scaling factors between CSS size and actual canvas size
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        const scaleX = canvas.width / box.width;
+        const scaleY = canvas.height / box.height;
 
-        // Map mouse coordinates from CSS space to canvas space
-        const mouseX = (event.clientX - rect.left) * scaleX;
-        const mouseY = (event.clientY - rect.top) * scaleY;
+        const mouseX = (event.clientX - box.left) * scaleX;
+        const mouseY = (event.clientY - box.top) * scaleY;
 
-        // Convert to character grid position
         const x = Math.floor(mouseX / (this.char_width * this.scale_x));
         const y = Math.floor(mouseY / ((this.char_height + this.char_height_gap) * this.scale_y));
 

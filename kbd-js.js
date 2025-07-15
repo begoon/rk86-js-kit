@@ -87,7 +87,7 @@ const padLayout = [
     ["AP2", "", "F5"],
 ];
 
-export default function create() {
+export function create() {
     const keyboardMain = document.getElementById("keyboard-main");
     keyboardLayout.forEach((row, index) => {
         const rowElement = document.createElement("div");

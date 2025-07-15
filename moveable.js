@@ -31,7 +31,6 @@ const make = (element) => {
         };
 
         element.addEventListener("mousedown", (e) => {
-            e.preventDefault();
             isDragging = true;
 
             offsetX = e.clientX - element.offsetLeft;

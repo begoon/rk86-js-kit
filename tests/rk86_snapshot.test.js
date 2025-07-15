@@ -137,7 +137,7 @@ test.each([
 ])("restore from %s", (type, snapshot) => {
     expect.assertions(51);
 
-    console.log = (str) => expect(str).toBe("screen geometry: 3 x 4");
+    console.log = (str) => expect(str).toBe("установлен размер экрана: 3 x 4");
 
     machine.ui.update_screen_geometry = (width, height) => expect([width, height]).toEqual([3, 4]);
     machine.ui.resize_canvas = (width, height) => expect([width, height]).toEqual([18, 80]);

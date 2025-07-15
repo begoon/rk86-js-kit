@@ -80,7 +80,7 @@ class I8080DisasmPanel {
             for (let i = 0; i < DATA_WIDTH; ++i) {
                 line += hex8(this.memory.read(addr + i)) + " ";
             }
-            line += "| ";
+            line += "";
             for (let i = 0; i < DATA_WIDTH; ++i) {
                 const ch = this.memory.read(addr + i);
                 line += String.fromCharCode(ch < 32 || ch > 127 ? 0x2e : ch);

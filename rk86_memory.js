@@ -40,6 +40,9 @@ export class Memory {
     }
 
     export() {
+        /**
+         * @param {number} n
+         */
         const h16 = (n) => "0x" + hex16(n);
         return {
             vg75_c001_00_cmd: this.vg75_c001_00_cmd,

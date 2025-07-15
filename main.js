@@ -1,9 +1,9 @@
 import { I8080 } from "./i8080.js";
 import Visualizer from "./i8080_visualizer.js";
 import I8080DisasmPanel from "./i8080disasm_panel.js";
-import KeyboardVisualizer from "./kbd-js.js";
+import * as KeyboardVisualizer from "./kbd-js.js";
 import { Console } from "./rk86_console.js";
-import FileParser from "./rk86_file_parser.js";
+import * as FileParser from "./rk86_file_parser.js";
 import { rk86_font_image } from "./rk86_font.js";
 import { Keyboard } from "./rk86_keyboard.js";
 import { convert_keyboard_sequence } from "./rk86_keyboard_injector.js";
@@ -18,11 +18,24 @@ import { hex16 } from "./hex.js";
 import moveable from "./moveable.js";
 import { saveAs } from "./saver.js";
 
+const elements = new Map();
+
+/**
+ * @param {string} id
+ * @returns {HTMLElement}
+ */
 const $ = (id) => {
+    const cachedID = elements.get(id);
+    if (cachedID) return cachedID;
+
     const element = document.getElementById(id);
     if (!element) throw new Error(`element "${id}" not found`);
+
+    elements.set(id, element);
     return element;
 };
+
+// ---
 
 class IO {
     constructor() {
@@ -32,24 +45,31 @@ class IO {
     }
 }
 
+/**
+ * class
+ */
 export class UI {
     constructor(machine) {
         this.machine = machine;
 
-        this.canvas = document.getElementById("canvas");
+        /**
+         * @type {HTMLCanvasElement}
+         */
+        // @ts-ignore
+        this.canvas = $("canvas");
         if (!this.canvas || !this.canvas.getContext) {
             alert("Tag <canvas> is not supported in the browser");
             return;
         }
 
-        this.ruslat = document.getElementById("ruslat");
-        this.ruslat_state = false;
-
-        this.sound = document.getElementById("sound");
-        this.sound_enabled = false;
-
-        this.ips = document.getElementById("ips");
-        this.tps = document.getElementById("tps");
+        /**
+         * @type {HTMLElement}
+         */
+        this.ips = $("ips");
+        /**
+         * @type {HTMLElement}
+         */
+        this.tps = $("tps");
 
         this.meta_press_count = 0;
 
@@ -65,10 +85,17 @@ export class UI {
         this.computer_snapshot_count = 1;
 
         this.configureEventListeners();
+
+        /** @type {import('./rk86_console.js').Console} */
+        this.terminal;
     }
 
     start_update_perf = () => setInterval(() => this.update_perf(), 2000);
 
+    /**
+     * @param {number} width
+     * @param {number} height
+     */
     resize_canvas(width, height) {
         this.canvas.width = width;
         this.canvas.height = height;
@@ -81,7 +108,7 @@ export class UI {
     reset() {
         this.machine.keyboard.reset();
         this.machine.cpu.jump(0xf800);
-        console.log("Reset");
+        console.log("%creset", "color: lightgreen; font-weight: bold");
     }
 
     restart() {
@@ -90,81 +117,120 @@ export class UI {
     }
 
     update_ruslat = (value) => {
-        if (value === this.ruslat_state) return;
-        this.ruslat_state = value;
-        this.ruslat.textContent = value ? "РУС" : "ЛАТ";
+        $("ruslat").textContent = value ? "РУС" : "ЛАТ";
     };
 
     update_perf() {
+        /**
+         * @param {HTMLElement} element
+         * @param {number} value
+         */
         const update = (element, value) => {
-            element.innerHTML = Math.floor(value * 1000).toLocaleString();
+            element.textContent = Math.floor(value * 1000).toLocaleString();
         };
         update(this.ips, this.machine.runner.instructions_per_millisecond);
         update(this.tps, this.machine.runner.ticks_per_millisecond);
     }
 
-    update_video_memory_base(base) {
-        document.getElementById("video-base").textContent = base.toString(16).toUpperCase();
+    /**
+     * @param {number} address
+     */
+    update_video_memory_address(address) {
+        $("video_memory_base").textContent = address.toString(16).toUpperCase();
     }
 
+    /**
+     * @param {number} width
+     * @param {number} height
+     */
     update_screen_geometry(width, height) {
-        document.getElementById("video-width").textContent = width.toString();
-        document.getElementById("video-height").textContent = height.toString();
+        $("screen_width").textContent = width.toString();
+        $("screen_height").textContent = height.toString();
     }
+
+    /**
+     * @param {string} element
+     * @param {boolean} visible
+     */
+    static setVisibility(element, visible) {
+        $(element).style.display = visible ? "block" : "none";
+    }
+
+    /**
+     * @param {string} element
+     * @returns {boolean}
+     */
+    static toggleVisibility(element) {
+        const visible = UI.isVisible(element);
+        UI.setVisibility(element, !visible);
+        return !visible;
+    }
+
+    /**
+     * @param {string} element
+     * @returns {boolean}
+     */
+    static isVisible(element) {
+        const v = $(element).style.display;
+        return v !== "none" && v !== "";
+    }
+
+    /**
+     * @param {string} element
+     * @return {boolean}
+     */
+    static toggleIcon(element) {
+        return $(element).classList.toggle("active");
+    }
+
+    /**
+     * @param {string} element
+     * @returns {boolean}
+     */
+    static isToggleOn = (element) => $(element).classList.contains("active");
 
     toggle_assembler() {
-        this.assembler_visible = !this.assembler_visible;
+        const visible = UI.toggleVisibility("assembler_panel");
+        UI.toggleIcon("assembler_toggle");
 
-        this.toggle_icon("assembler_toggle", this.assembler_visible);
+        UI.setVisibility("canvas", !visible);
 
-        this.assembler_panel.style.display = this.assembler_visible ? "block" : "none";
-        this.canvas.style.display = this.assembler_visible ? "none" : "block";
-
-        if (this.assembler_visible) this.assembler_panel.focus();
-        else this.canvas.focus();
-    }
-
-    toggle_icon(element, active) {
-        document.getElementById(element).classList.toggle("active", active);
+        visible ? $("assembler_panel").focus() : $("canvas").focus();
     }
 
     toggle_disassembler() {
-        this.disassembler_visible = !this.disassembler_visible;
-        if (this.terminal_visible && this.disassembler_visible) this.toggle_terminal();
+        const visible = UI.toggleVisibility("disassembler_panel");
+        UI.toggleIcon("disassembler_toggle");
 
-        this.disassembler_panel.style.display = this.disassembler_visible ? "block" : "none";
-
-        this.toggle_icon("disassembler_toggle", this.disassembler_visible);
+        if (visible) $("disassembler_panel").focus();
 
         this.machine.ui.i8080disasm.refresh();
         this.machine.ui.i8080disasm.go_code(this.machine.cpu.pc);
     }
 
     toggle_terminal() {
-        this.terminal_visible = !this.terminal_visible;
-        if (this.terminal_visible && this.disassembler_visible) this.toggle_disassembler();
+        const visible = UI.toggleVisibility("terminal_panel");
+        UI.toggleIcon("terminal_toggle");
 
-        this.terminal_panel.style.display = this.terminal_visible ? "block" : "none";
-
-        this.toggle_icon("terminal_toggle", this.terminal_visible);
-
-        if (this.terminal_visible) this.terminal.focus();
+        // This is the actual terminal object, not the panel.
+        if (visible) this.terminal.focus();
     }
 
     toggle_visualizer() {
-        this.visualizer_visible = !this.visualizer_visible;
+        const visible = UI.toggleVisibility("visualizer_panel");
+        UI.toggleIcon("visualizer_toggle");
 
-        this.visualizer_panel.style.display = this.visualizer_visible ? "block" : "none";
-
-        this.toggle_icon("visualizer_toggle", this.visualizer_visible);
+        this.visualizer_visible = visible;
     }
 
     toggle_keyboard() {
-        this.keyboard_visible = !this.keyboard_visible;
+        const visible = UI.toggleVisibility("keyboard_panel");
+        UI.toggleIcon("keyboard_toggle");
+        // this.keyboard_visible = !this.keyboard_visible;
 
-        this.keyboard_panel.style.display = this.keyboard_visible ? "block" : "none";
+        // this.keyboard_panel.style.display = this.keyboard_visible ? "block" : "none";
 
-        this.toggle_icon("keyboard_toggle", this.keyboard_visible);
+        // UI.toggleIcon("keyboard_toggle", this.keyboard_visible);
     }
 
     emulator_snapshot() {
@@ -178,23 +244,24 @@ export class UI {
     configureEventListeners() {
         const machine = this.machine;
 
-        document.getElementById("ruslat-toggle").addEventListener("click", () => {
+        $("ruslat_toggle").addEventListener("click", () => {
             const ruslat_flag = 0x7606;
             const state = this.machine.memory.read(ruslat_flag) ? 0x00 : 0xff;
             this.machine.memory.write(ruslat_flag, state);
             this.update_ruslat(state);
         });
 
-        this.sound.addEventListener("click", () => {
-            this.sound_enabled = !this.sound_enabled;
-            this.machine.runner.init_sound(this.sound_enabled);
-            console.log("sound " + (this.sound_enabled ? "enabled" : "disabled"));
+        $("sound_toggle").addEventListener("click", () => {
+            const sound_enabled = UI.toggleIcon("sound_toggle");
 
-            const toggle = document.getElementById("sound-icon-toggle");
-            toggle.src = this.sound_enabled ? toggle.dataset.on : toggle.dataset.muted;
+            this.machine.runner.init_sound(sound_enabled);
 
-            const icon = document.getElementById("sound-icon");
-            icon.textContent = icon.dataset[this.sound_enabled ? "on" : "off"];
+            const toggle = $("sound-icon-toggle");
+            toggle.src = sound_enabled ? toggle.dataset.on : toggle.dataset.muted;
+
+            const icon = $("sound-icon");
+            icon.textContent = icon.dataset[sound_enabled ? "on" : "off"];
+
             icon.classList.add("visible");
             setTimeout(() => icon.classList.remove("visible"), 2000);
         });
@@ -205,42 +272,15 @@ export class UI {
             document.getElementById("file_selector").focus();
         });
 
-        document.getElementById("assembler_toggle").addEventListener("click", () => this.toggle_assembler());
-        this.assembler_panel = document.getElementById("assembler_panel");
-        this.assembler_visible = false;
-
-        document.getElementById("disassembler_toggle").addEventListener("click", () => this.toggle_disassembler());
-
-        this.disassembler_panel = document.getElementById("disassembler_panel");
-        this.disassembler_icon = document.getElementById("disassembler_icon");
-        this.disassembler_visible = false;
-
-        moveable(this.disassembler_panel)();
-
-        // visualizer
-
-        this.visualizer_panel = $("visualizer_panel");
-        this.visualizer_visible = false;
-
-        moveable(this.visualizer_panel)();
-
-        // keyboard
-
-        this.keyboard_panel = $("keyboard_panel");
-        this.keyboard_visible = false;
-
-        moveable(this.keyboard_panel)();
-
+        $("assembler_toggle").addEventListener("click", () => this.toggle_assembler());
+        $("disassembler_toggle").addEventListener("click", () => this.toggle_disassembler());
         $("visualizer_toggle").addEventListener("click", () => this.toggle_visualizer());
-
-        // terminal
-
-        this.terminal_panel = $("terminal_panel");
-        this.terminal_visible = false;
-
-        moveable(this.terminal_panel)();
-
         $("terminal_toggle").addEventListener("click", () => this.toggle_terminal());
+
+        moveable($("disassembler_panel"))();
+        moveable($("visualizer_panel"))();
+        moveable($("terminal_panel"))();
+        moveable($("keyboard_panel"))();
 
         // keyboard dispatcher
 
@@ -248,23 +288,20 @@ export class UI {
             if (this.command_mode) {
                 switch (event.code) {
                     case "KeyL":
-                        document.getElementById("selected_file").style.display = "none";
-                        document.getElementById("file_selector").style.display = "block";
-                        document.getElementById("file_selector").focus();
+                        $("selected_file").style.display = "none";
+                        $("file_selector").style.display = "block";
+                        $("file_selector").focus();
                         event.preventDefault();
                         break;
                     case "KeyU":
-                        document.querySelector("#upload_selector").click();
+                        $("upload_selector").click();
                         event.preventDefault();
                         break;
                     case "KeyP":
                         pause.click();
                         break;
                     case "KeyG":
-                        this.machine.cpu.jump(window.selected_file_entry);
-                        console.log("запуск с адреса " + window.selected_file_entry.toString(16));
-                        this.machine.runner.execute();
-                        event.preventDefault();
+                        $("run").click();
                         break;
                     case "KeyK":
                         this.toggle_terminal();
@@ -275,13 +312,12 @@ export class UI {
                         break;
                     case "KeyD":
                         this.toggle_disassembler();
-                        this.disassembler_panel.focus();
                         break;
                     case "KeyV":
                         this.toggle_visualizer();
                         break;
                     case "KeyS":
-                        this.sound.click();
+                        $("sound_toggle").click();
                         break;
                     case "KeyR":
                         this.restart();
@@ -329,9 +365,9 @@ export class UI {
             return false;
         };
 
-        this.disassembler_panel.addEventListener("keyup", (event) => {
+        $("disassembler_panel").addEventListener("keyup", (event) => {
             if (event.key === "Escape") {
-                this.disassembler_panel.blur();
+                $("disassembler_panel").blur();
                 this.toggle_disassembler();
             }
             if (event.key === "Enter") {
@@ -340,7 +376,7 @@ export class UI {
             event.stopPropagation();
         });
 
-        this.disassembler_panel.addEventListener("keydown", (event) => {
+        $("disassembler_panel").addEventListener("keydown", (event) => {
             event.stopPropagation();
         });
 
@@ -461,9 +497,9 @@ export async function main() {
     const keyboard = new Keyboard();
     const io = new IO();
 
+    /** @type {{ font: string, keyboard: Keyboard, io: IO, ui: UI }} */
     const machine = {
         font: rk86_font_image(),
-        file_parser: new FileParser(),
         //
         keyboard,
         io,
@@ -477,92 +513,107 @@ export async function main() {
 
     machine.tape = new Tape(machine);
 
+    /**
+     *
+     * @param {string} name
+     * @returns {Promise<import('./rk86_file_parser.js').File >}
+     */
     async function load_catalog_file(name) {
         const array = Array.from(new Uint8Array(await (await fetch("./files/" + name)).arrayBuffer()));
         console.log(`загрузка файла ${name} из каталога, размер ${array.length} байт`);
-        const file = machine.file_parser.parse_rk86_binary(name, array);
+        const file = FileParser.parse_rk86_binary(name, array);
         console.log(
-            `загружен файл:`,
-            file.name,
-            `адрес: ${hex16(file.start)}-${hex16(file.end)}`,
+            `загружен файл`,
+            `[${file.name}]`,
+            `c адреса ${hex16(file.start)} до ${hex16(file.end)},`,
             `запуск: G${hex16(file.entry)}`
         );
         return file;
     }
 
+    /** @typedef {Object.<number, string>} KeyCodes */
+    const KEY_CODES = {
+        8: "Backspace",
+        9: "Tab",
+        13: "Enter",
+        16: "ShiftRight",
+        17: "ControlLeft",
+        32: "Space",
+        35: "End",
+        36: "Home",
+        37: "ArrowLeft",
+        38: "ArrowUp",
+        39: "ArrowRight",
+        40: "ArrowDown",
+        46: "Delete",
+        48: "Digit0",
+        49: "Digit1",
+        50: "Digit2",
+        51: "Digit3",
+        52: "Digit4",
+        53: "Digit5",
+        54: "Digit6",
+        55: "Digit7",
+        56: "Digit8",
+        57: "Digit9",
+        65: "KeyA",
+        66: "KeyB",
+        67: "KeyC",
+        68: "KeyD",
+        69: "KeyE",
+        70: "KeyF",
+        71: "KeyG",
+        72: "KeyH",
+        73: "KeyI",
+        74: "KeyJ",
+        75: "KeyK",
+        76: "KeyL",
+        77: "KeyM",
+        78: "KeyN",
+        79: "KeyO",
+        80: "KeyP",
+        81: "KeyQ",
+        82: "KeyR",
+        83: "KeyS",
+        84: "KeyT",
+        85: "KeyU",
+        86: "KeyV",
+        87: "KeyW",
+        88: "KeyX",
+        89: "KeyY",
+        90: "KeyZ",
+        112: "F1",
+        113: "F2",
+        114: "F3",
+        115: "F4",
+        116: "F5",
+        117: "F6",
+        118: "F7",
+        121: "F10",
+        186: "Semicolon",
+        188: "Comma",
+        189: "Minus",
+        190: "Period",
+        192: "Quote",
+        191: "Slash",
+        219: "BracketLeft",
+        221: "BracketRight",
+        226: "Backslash",
+    };
+
+    /**
+     * @param {string|number} key - Either a string keyboard code (like "KeyA") or a numeric key code (like 65)
+     * @returns {string} - The keyboard event code (like "KeyA")
+     */
     function translate_key(key) {
         if (typeof key === "string") return key;
-        return {
-            8: "Backspace",
-            9: "Tab",
-            13: "Enter",
-            16: "ShiftRight",
-            17: "ControlLeft",
-            32: "Space",
-            35: "End",
-            36: "Home",
-            16: "ShiftLeft",
-            37: "ArrowLeft",
-            38: "ArrowUp",
-            39: "ArrowRight",
-            40: "ArrowDown",
-            46: "Delete",
-            48: "Digit0",
-            49: "Digit1",
-            50: "Digit2",
-            51: "Digit3",
-            52: "Digit4",
-            53: "Digit5",
-            54: "Digit6",
-            55: "Digit7",
-            56: "Digit8",
-            57: "Digit9",
-            65: "KeyA",
-            66: "KeyB",
-            67: "KeyC",
-            68: "KeyD",
-            69: "KeyE",
-            70: "KeyF",
-            71: "KeyG",
-            72: "KeyH",
-            73: "KeyI",
-            74: "KeyJ",
-            75: "KeyK",
-            76: "KeyL",
-            77: "KeyM",
-            78: "KeyN",
-            79: "KeyO",
-            80: "KeyP",
-            81: "KeyQ",
-            82: "KeyR",
-            83: "KeyS",
-            84: "KeyT",
-            85: "KeyU",
-            86: "KeyV",
-            87: "KeyW",
-            88: "KeyX",
-            89: "KeyY",
-            90: "KeyZ",
-            112: "F1",
-            113: "F2",
-            114: "F3",
-            115: "F4",
-            116: "F5",
-            117: "F6",
-            118: "F7",
-            121: "F10",
-            186: "Semicolon",
-            188: "Comma",
-            189: "Minus",
-            190: "Period",
-            192: "Quote",
-            191: "Slash",
-            219: "BracketLeft",
-            221: "BracketRight",
-            226: "Backslash",
-        }[key];
+        return KEY_CODES[key];
     }
 
+    /**
+     * @param {Array<{keys: string[], duration: number, action: string}>} sequence
+     * @param {number} i
+     */
     function execute_commands_loop(sequence, i) {
         const { keyboard } = machine;
         if (i >= sequence.length) return;
@@ -587,45 +638,56 @@ export async function main() {
         return "files/" + name;
     }
 
+    /**
+     * @param {string} url
+     * @returns {Promise<number[]|undefined>}
+     */
     async function fetch_file(url) {
         console.log(`загрузка файла ${url}`);
         try {
             const content = new Uint8Array(await (await fetch(url)).arrayBuffer());
             console.log(`загружен файл %c${basename(url)}%c длиной ${content.length} байт`, "font-weight: bold", "");
-            return content;
+            return Array.from(content);
         } catch (error) {
             console.error(`ошибка загрузки файла ${url}: ${error}`);
         }
     }
 
-    async function load_file(name) {
+    /**
+     * @param {string} name
+     * @returns {Promise<void>}
+     */
+    async function loadAutoexecFile(name) {
         const url = filenameURL(name);
         const content = await fetch_file(url);
         if (!content) return;
-        place_file(name, content);
+        injectFile(name, content);
     }
 
     let selected_file_name = "";
     let selected_file_entry = 0;
 
-    function place_file(name, binary) {
-        console.log("place_file", name, binary.length, "bytes");
-        const parser = machine.file_parser;
-        const json = parser.is_json(binary);
+    /**
+     * @param {string} name
+     * @param {number[]} binary
+     */
+    function injectFile(name, binary) {
+        console.log(`размещаем файл [${name}] длиной ${binary.length} в память эмулятора`);
+        const json = FileParser.is_json(binary);
         if (json) {
-            const snapshot = rk86_snapshot_restore(json, machine, simulate_keyboard);
-            console.log(`образ '${name}' загружен`, hex16(json.cpu.pc));
+            rk86_snapshot_restore(json, machine, simulate_keyboard);
+            console.log(`образ [${name}] загружен, PC=${hex16(json.cpu.pc)}`);
             return;
         }
         try {
-            const file = parser.parse_rk86_binary(name, binary);
+            const file = FileParser.parse_rk86_binary(name, binary);
             machine.memory.load_file(file);
             selected_file_name = file.name;
             selected_file_entry = file.entry;
             console.log(
                 `` +
-                    `Файл '${name}' загружен, ` +
-                    `адрес: ${hex16(file.start, "0x")}-${hex16(file.end, "0x")}, ` +
+                    `загружен файл [${name}] ` +
+                    `c адреса ${hex16(file.start, "0x")} по ${hex16(file.end, "0x")}, ` +
                     `запуск: G${file.entry.toString(16)}`
             );
         } catch (e) {
@@ -635,9 +697,6 @@ export async function main() {
     }
 
     machine.memory.load_file(await load_catalog_file("mon32.bin"));
-    // machine.memory.load_file(await load_file("DIVERSE.GAM"));
-    // machine.memory.load_file(await load_catalog_file("GFIRE.GAM"));
-    // machine.memory.load_file(await load_file("RESCUE.GAM"));
 
     machine.screen.start();
 
@@ -648,8 +707,8 @@ export async function main() {
     const autoexec_loadonly = (match = url.match(/loadonly=([^&]+)/)) ? match[1] : null;
 
     if (autoexec_file) {
-        console.log(`Автозагрузка файла: ${autoexec_file}`);
-        await load_file(autoexec_file);
+        console.log(`автозагрузка файла: ${autoexec_file}`);
+        await loadAutoexecFile(autoexec_file);
     }
 
     machine.runner.execute();
@@ -659,85 +718,84 @@ export async function main() {
         machine.cpu.jump(0xf800);
     }
 
-    document.getElementById("reset").addEventListener("click", () => {
-        reset();
-    });
-
-    document.getElementById("restart").addEventListener("click", () => {
+    $("reset").addEventListener("click", () => reset());
+    $("restart").addEventListener("click", () => {
         machine.memory.zero_ram();
         reset();
     });
 
-    const header = document.getElementById("header");
-    const footer = document.getElementById("footer");
-    const disassember_panel = document.getElementById("disassembler_panel");
-    const terminal_panel = document.getElementById("terminal_panel");
-    const visualizer_panel = document.getElementById("visualizer_panel");
-    const keyboard_panel = document.getElementById("keyboard_panel");
+    const hideablePanels = [
+        "header",
+        "footer",
+        "disassembler_panel",
+        "terminal_panel",
+        "visualizer_panel",
+        "keyboard_panel",
+    ];
 
     document.addEventListener("fullscreenchange", () => {
         const fullscreen = document.fullscreenElement;
-        if (!fullscreen) {
-            header.classList.remove("hidden");
-            footer.classList.remove("hidden");
-            disassember_panel.classList.remove("hidden");
-            terminal_panel.classList.remove("hidden");
-            visualizer_panel.classList.remove("hidden");
-            keyboard_panel.classList.remove("hidden");
-        } else {
-            header.classList.add("hidden");
-            footer.classList.add("hidden");
-            disassember_panel.classList.add("hidden");
-            terminal_panel.classList.add("hidden");
-            visualizer_panel.classList.add("hidden");
-            keyboard_panel.classList.add("hidden");
-        }
+        hideablePanels.forEach((id) => {
+            const classList = $(id).classList;
+            fullscreen ? classList.add("hidden") : classList.remove("hidden");
+        });
     });
 
     machine.memory.update_ruslat = machine.ui.update_ruslat;
 
-    const file_selector = document.getElementById("file_selector");
-    const catalog = document.getElementById("catalog_files");
     for (const name of tape_catalog()) {
         const option = document.createElement("option");
         option.value = name;
-        catalog.appendChild(option);
+        $("catalog_files").appendChild(option);
     }
-    file_selector.addEventListener("keyup", (event) => {
+
+    $("file_selector").addEventListener("keyup", (event) => {
         if (event.key === "Escape") {
-            file_selector.value = "";
-            file_selector.blur();
+            $("file_selector").value = "";
+            $("file_selector").blur();
         }
         event.stopPropagation();
     });
-    file_selector.addEventListener("keydown", (event) => event.stopPropagation());
-    file_selector.addEventListener("blur", (event) => {
-        selected_file_name = file_selector.value;
-        document.getElementById("selected_file").textContent = selected_file_name;
-        file_selector.style.display = "none";
-        document.getElementById("selected_file").style.display = selected_file_name ? "block" : "none";
+
+    $("file_selector").addEventListener("keydown", (event) => event.stopPropagation());
+
+    $("file_selector").addEventListener("blur", (event) => {
+        selected_file_name = $("file_selector").value;
+        $("selected_file").textContent = selected_file_name;
+        $("file_selector").style.display = "none";
+        $("selected_file").style.display = selected_file_name ? "block" : "none";
         event.stopPropagation();
-    });
-    file_selector.addEventListener("change", (event) => {
-        event.stopPropagation();
-        file_selector.blur();
     });
 
-    const upload_selector = document.getElementById("upload_selector");
-    upload_selector.addEventListener("change", async (event) => {
+    $("file_selector").addEventListener("change", (event) => {
         event.stopPropagation();
-        const file = upload_selector.files[0];
-        console.log(`uploading file: ${file.name}`);
+        $("file_selector").blur();
+    });
+
+    $("upload_selector").addEventListener("change", async (event) => {
+        event.stopPropagation();
+        const file = $("upload_selector").files[0];
+        console.log(`загружаем файл [${file.name}]`);
         if (!file) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const binary = new Uint8Array(e.target.result);
+            const data = e.target?.result;
+            if (!(data instanceof ArrayBuffer)) {
+                console.error("%ошибка: данные не являются ArrayBuffer", "color: red");
+                return;
+            }
+            const binary = new Uint8Array(data);
+            console.log(`загружен внешний файл ${file.name}, размер ${binary.length} байт`);
             try {
-                place_file(file.name, binary);
+                injectFile(file.name, binary);
+
                 window.selected_file_entry = selected_file_entry;
+
+                // Update the UI to show the selected file name
                 $("selected_file").textContent = selected_file_name;
                 $("selected_file").style.display = "block";
             } catch (error) {
+                // Handle any errors that occur during file processing
                 console.error(`Error loading file: ${error.message}`);
                 alert(`Ошибка загрузки файла: ${error.message}`);
             }
@@ -747,9 +805,10 @@ export async function main() {
             alert(`Ошибка чтения файла: ${error.message}`);
         };
         reader.readAsArrayBuffer(file);
-        upload_selector.value = ""; // Reset the file input
-        file_selector.value = selected_file_name; // Update the file selector with the uploaded file name
-        document.getElementById("selected_file").style.display = "none"; // Hide the selected file input
+
+        $("upload_selector").value = "";
+        $("file_selector").value = selected_file_name;
+        $("selected_file").style.display = "none";
     });
 
     const selected_file_element = $("selected_file");
@@ -759,29 +818,32 @@ export async function main() {
         selected_file_element.style.display = "block";
     }
 
-    document.getElementById("load").addEventListener("click", async () => {
+    async function load_catalog_file_from_selector() {
         if (!selected_file_name) return alert("Hе выбран файл для загрузки.");
         const filename = selected_file_name;
-        console.log(`loading file: ${filename}`);
+        console.log(`загружаем файл [${filename}]`);
         const file = await load_catalog_file(filename);
-        console.log(`loaded file: ${filename}`);
+        console.log(`загружен файл [${filename}]`);
         machine.memory.load_file(file);
-        const msg = [
-            `Загружен файл "${filename}"`,
-            `Адрес: 0x${hex16(file.start)}-0x${hex16(file.end)}`,
-            `Запуск: G${hex16(file.entry)}`,
-        ].join("\n");
-        console.log(msg);
-        alert(msg);
+        return file;
+    }
+
+    $("load").addEventListener("click", async () => {
+        const file = await load_catalog_file_from_selector();
+        if (!file) return;
+        alert(
+            [
+                `загружен файл [${file.name}]`,
+                `с адреса ${hex16(file.start, "0x")} по ${hex16(file.end, "0x")}`,
+                `запуск: G${hex16(file.entry)}`,
+            ].join("\n")
+        );
     });
 
-    document.getElementById("run").addEventListener("click", async () => {
-        if (!selected_file_name) return alert("Не выбран файл для запуска.");
-        const filename = selected_file_name;
-        console.log(`loading file: ${filename}`);
-        const file = await load_catalog_file(filename);
-        console.log(`loaded file: ${filename}`);
-        machine.memory.load_file(file);
+    $("run").addEventListener("click", async () => {
+        const file = await load_catalog_file_from_selector();
+        if (!file) return;
+
         machine.cpu.jump(file.entry);
     });
 
@@ -797,30 +859,21 @@ export async function main() {
 
     // visualizer
     {
-        const template = document.createElement("template");
         const content = await (await fetch("./i8080_visualizer.html")).text();
-        template.innerHTML = content;
+        const loaded = new DOMParser().parseFromString(content, "text/html");
 
-        const loaded = template.content.querySelector("#visualizer_panel");
-        const target = document.getElementById("visualizer_panel");
-
-        while (loaded.firstChild) target.appendChild(loaded.firstChild);
+        $("visualizer_panel").innerHTML = loaded.getElementById("visualizer_panel").innerHTML;
 
         machine.ui.visualizer = new Visualizer();
     }
 
     // keyboard visualizer
     {
-        const template = document.createElement("template");
         const content = await (await fetch("./kbd-js.html")).text();
-        template.innerHTML = content;
+        const loaded = new DOMParser().parseFromString(content, "text/html");
 
-        const loaded = template.content.querySelector("#keyboard_panel");
-        const target = document.getElementById("keyboard_panel");
-
-        while (loaded.firstChild) target.appendChild(loaded.firstChild);
-
-        KeyboardVisualizer();
+        $("keyboard_panel").innerHTML = loaded.getElementById("keyboard_panel").innerHTML;
+        KeyboardVisualizer.create();
     }
 }
 

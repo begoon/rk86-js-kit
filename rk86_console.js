@@ -17,6 +17,9 @@ export function parseNumber(str, default_value = undefined) {
     return value;
 }
 
+/**
+ * @class
+ */
 export class Console {
     static from_rk86_table = [
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
