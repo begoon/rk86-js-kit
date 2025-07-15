@@ -22,7 +22,7 @@ const elements = new Map();
 
 /**
  * @param {string} id
- * @returns {HTMLElement}
+ * @returns {!HTMLElement}
  */
 const $ = (id) => {
     const cachedID = elements.get(id);
@@ -256,20 +256,20 @@ export class UI {
 
             this.machine.runner.init_sound(sound_enabled);
 
-            const toggle = $("sound-icon-toggle");
-            toggle.src = sound_enabled ? toggle.dataset.on : toggle.dataset.muted;
+            const toggle = /** @type {HTMLImageElement} */ ($("sound_icon_toggle"));
+            toggle.src = /** @type {string} */ (sound_enabled ? toggle.dataset.on : toggle.dataset.muted);
 
-            const icon = $("sound-icon");
-            icon.textContent = icon.dataset[sound_enabled ? "on" : "off"];
+            const icon = $("sound_icon");
+            icon.textContent = /** @type {string} */ (icon.dataset[sound_enabled ? "on" : "off"]);
 
             icon.classList.add("visible");
             setTimeout(() => icon.classList.remove("visible"), 2000);
         });
 
-        document.getElementById("catalog").addEventListener("click", () => {
-            document.getElementById("selected_file").style.display = "none";
-            document.getElementById("file_selector").style.display = "block";
-            document.getElementById("file_selector").focus();
+        $("catalog").addEventListener("click", () => {
+            UI.setVisibility("selected_file", false);
+            UI.setVisibility("file_selector", true);
+            $("file_selector").focus();
         });
 
         $("assembler_toggle").addEventListener("click", () => this.toggle_assembler());
@@ -516,14 +516,15 @@ export async function main() {
     /**
      *
      * @param {string} name
-     * @returns {Promise<import('./rk86_file_parser.js').File >}
+     * @returns {Promise<import('./rk86_file_parser.js').File|undefined>} >}
      */
     async function load_catalog_file(name) {
-        const array = Array.from(new Uint8Array(await (await fetch("./files/" + name)).arrayBuffer()));
-        console.log(`загрузка файла ${name} из каталога, размер ${array.length} байт`);
-        const file = FileParser.parse_rk86_binary(name, array);
+        const content = await fetch_file(name);
+        if (!content) return undefined;
+        console.log(`загрузка файла [${name}] из каталога размером ${content.length} байт`);
+        const file = FileParser.parse_rk86_binary(name, content);
         console.log(
-            `загружен файл`,
+            `загружен файл двоичный РК86`,
             `[${file.name}]`,
             `c адреса ${hex16(file.start)} до ${hex16(file.end)},`,
             `запуск: G${hex16(file.entry)}`
@@ -630,24 +631,25 @@ export async function main() {
         execute_commands(queue);
     }
 
-    const basename = (url) => url.split("/").at(-1);
-
-    function filenameURL(name) {
-        if (name.startsWith("http")) return name;
-        if (name.startsWith("./")) return name;
-        return "files/" + name;
-    }
-
     /**
      * @param {string} url
+     * @returns {string} - The base name of the URL (the last part after the last slash)
+     */
+    const basename = (url) => url.split("/").at(-1) || url;
+
+    /**
+     * @param {string} name
      * @returns {Promise<number[]|undefined>}
      */
-    async function fetch_file(url) {
-        console.log(`загрузка файла ${url}`);
+    async function fetch_file(name) {
+        const url = filenameURL(name);
+        console.log(`скачиваем файл [${url}]`);
         try {
-            const content = new Uint8Array(await (await fetch(url)).arrayBuffer());
-            console.log(`загружен файл %c${basename(url)}%c длиной ${content.length} байт`, "font-weight: bold", "");
-            return Array.from(content);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`ошибка HTTP: ${response.status}`);
+            const content = Array.from(new Uint8Array(await response.arrayBuffer()));
+            console.log(`скачен файл [${basename(url)}] длиной ${content.length} байт`);
+            return content;
         } catch (error) {
             console.error(`ошибка загрузки файла ${url}: ${error}`);
         }
@@ -655,23 +657,35 @@ export async function main() {
 
     /**
      * @param {string} name
+     * @returns {string}
+     */
+    function filenameURL(name) {
+        if (name.startsWith("http") || name.startsWith("./")) return name;
+        return "files/" + name;
+    }
+
+    /**
+     * @param {string} name
      * @returns {Promise<void>}
      */
     async function loadAutoexecFile(name) {
-        const url = filenameURL(name);
-        const content = await fetch_file(url);
+        const content = await fetch_file(name);
         if (!content) return;
-        injectFile(name, content);
+        putFileToMemory(name, content);
     }
 
     let selected_file_name = "";
-    let selected_file_entry = 0;
+    let selected_file_entry = -1;
 
     /**
      * @param {string} name
      * @param {number[]} binary
+     * @returns {import('./rk86_file_parser.js').File|undefined}
      */
-    function injectFile(name, binary) {
+    function putFileToMemory(name, binary) {
+        selected_file_name = "";
+        selected_file_entry = -1;
+
         console.log(`размещаем файл [${name}] длиной ${binary.length} в память эмулятора`);
         const json = FileParser.is_json(binary);
         if (json) {
@@ -690,13 +704,18 @@ export async function main() {
                     `c адреса ${hex16(file.start, "0x")} по ${hex16(file.end, "0x")}, ` +
                     `запуск: G${file.entry.toString(16)}`
             );
+            return file;
         } catch (e) {
             console.error(e);
-            return;
         }
     }
 
-    machine.memory.load_file(await load_catalog_file("mon32.bin"));
+    const monitor = await load_catalog_file("mon32.bin");
+    if (!monitor) {
+        alert("Ошибка загрузки монитора mon32.bin");
+        return;
+    }
+    machine.memory.load_file(monitor);
 
     machine.screen.start();
 
@@ -775,23 +794,20 @@ export async function main() {
     $("upload_selector").addEventListener("change", async (event) => {
         event.stopPropagation();
         const file = $("upload_selector").files[0];
-        console.log(`загружаем файл [${file.name}]`);
+        console.log(`загружаем внешний файл [${file.name}]`);
         if (!file) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
             const data = e.target?.result;
             if (!(data instanceof ArrayBuffer)) {
-                console.error("%ошибка: данные не являются ArrayBuffer", "color: red");
+                console.error("%cошибка: данные не являются ArrayBuffer", "color: red");
                 return;
             }
             const binary = new Uint8Array(data);
             console.log(`загружен внешний файл ${file.name}, размер ${binary.length} байт`);
             try {
-                injectFile(file.name, binary);
+                putFileToMemory(file.name, binary);
 
-                window.selected_file_entry = selected_file_entry;
-
-                // Update the UI to show the selected file name
                 $("selected_file").textContent = selected_file_name;
                 $("selected_file").style.display = "block";
             } catch (error) {
@@ -801,8 +817,8 @@ export async function main() {
             }
         };
         reader.onerror = (error) => {
-            console.error(`Error reading file: ${error.message}`);
-            alert(`Ошибка чтения файла: ${error.message}`);
+            console.error(`ошибка при загрузке внешнего файла: ${error.message}`);
+            alert(`ошибка при загрузке внешнего файла: ${error.message}`);
         };
         reader.readAsArrayBuffer(file);
 
@@ -818,13 +834,18 @@ export async function main() {
         selected_file_element.style.display = "block";
     }
 
+    /**
+     * @returns {Promise<import('./rk86_file_parser.js').File|undefined>}
+     */
     async function load_catalog_file_from_selector() {
-        if (!selected_file_name) return alert("Hе выбран файл для загрузки.");
+        if (!selected_file_name) return alert("Hе выбран файл для загрузки."), undefined;
         const filename = selected_file_name;
-        console.log(`загружаем файл [${filename}]`);
-        const file = await load_catalog_file(filename);
-        console.log(`загружен файл [${filename}]`);
-        machine.memory.load_file(file);
+        console.log(`файл [${filename}] выбран для загрузки`);
+        const content = await fetch_file(filename);
+        if (!content) return undefined;
+        const file = putFileToMemory(filename, content);
+        // machine.memory.load_file(file);
+        // console.log(`файл [${filename}] помещен в память эмулятора`);
         return file;
     }
 
@@ -841,9 +862,12 @@ export async function main() {
     });
 
     $("run").addEventListener("click", async () => {
+        if (selected_file_entry >= 0) {
+            machine.cpu.jump(selected_file_entry);
+            return;
+        }
         const file = await load_catalog_file_from_selector();
         if (!file) return;
-
         machine.cpu.jump(file.entry);
     });
 
