@@ -55,8 +55,7 @@ export class UI {
         /**
          * @type {HTMLCanvasElement}
          */
-        // @ts-ignore
-        this.canvas = $("canvas");
+        this.canvas = /** @type {HTMLCanvasElement} */ ($("canvas"));
         if (!this.canvas || !this.canvas.getContext) {
             alert("Tag <canvas> is not supported in the browser");
             return;
@@ -80,9 +79,6 @@ export class UI {
 
         this.memory_snapshot_name = "rk86-memory";
         this.memory_snapshot_count = 1;
-
-        this.computer_snapshot_name = "rk86-snapshot";
-        this.computer_snapshot_count = 1;
 
         this.configureEventListeners();
 
@@ -155,6 +151,12 @@ export class UI {
     static setVisibility(element, visible) {
         $(element).style.display = visible ? "block" : "none";
     }
+
+    /** @param {string} element */
+    static hide = (element) => UI.setVisibility(element, false);
+
+    /** @param {string} element */
+    static show = (element) => UI.setVisibility(element, true);
 
     /**
      * @param {string} element
@@ -233,6 +235,9 @@ export class UI {
         // UI.toggleIcon("keyboard_toggle", this.keyboard_visible);
     }
 
+    computer_snapshot_name = "rk86-snapshot";
+    computer_snapshot_count = 1;
+
     emulator_snapshot() {
         const json = rk86_snapshot(this.machine, "2.0.0");
         const filename = `${this.computer_snapshot_name}-${this.computer_snapshot_count}.json`;
@@ -266,10 +271,13 @@ export class UI {
             setTimeout(() => icon.classList.remove("visible"), 2000);
         });
 
-        $("catalog").addEventListener("click", () => {
-            UI.setVisibility("selected_file", false);
-            UI.setVisibility("file_selector", true);
-            $("file_selector").focus();
+        $("catalog_button").addEventListener("click", () => {
+            console.log("catalog_button");
+            /** @type {HTMLInputElement} */ ($("catalog_selector")).value = "";
+
+            UI.show("catalog_selector");
+            UI.hide("selected_file");
+            $("catalog_selector").focus();
         });
 
         $("assembler_toggle").addEventListener("click", () => this.toggle_assembler());
@@ -288,14 +296,10 @@ export class UI {
             if (this.command_mode) {
                 switch (event.code) {
                     case "KeyL":
-                        $("selected_file").style.display = "none";
-                        $("file_selector").style.display = "block";
-                        $("file_selector").focus();
-                        event.preventDefault();
+                        $("catalog_button").click();
                         break;
                     case "KeyU":
                         $("upload_selector").click();
-                        event.preventDefault();
                         break;
                     case "KeyP":
                         pause.click();
@@ -305,7 +309,6 @@ export class UI {
                         break;
                     case "KeyK":
                         this.toggle_terminal();
-                        event.preventDefault();
                         break;
                     case "KeyA":
                         this.toggle_assembler();
@@ -333,14 +336,14 @@ export class UI {
                         break;
                 }
                 this.command_mode = false;
-                document.getElementById("shortcuts").classList.remove("visible");
+                $("shortcuts").classList.remove("visible");
                 return;
             }
 
             if (this.meta_press_count > 0) {
                 if (event.code === "KeyK") {
                     this.command_mode = true;
-                    document.getElementById("shortcuts").classList.add("visible");
+                    $("shortcuts").classList.add("visible");
                 }
                 return;
             }
@@ -380,64 +383,61 @@ export class UI {
             event.stopPropagation();
         });
 
-        document.getElementById("fullscreen").addEventListener("click", () => {
+        $("fullscreen").addEventListener("click", () => {
             this.machine.ui.canvas.requestFullscreen();
         });
 
-        const pause = document.getElementById("pause");
-        pause.addEventListener("click", () => {
+        $("pause").addEventListener("click", () => {
             machine.runner.paused = !machine.runner.paused;
-            const icon = document.getElementById("pause-icon");
-            icon.src = machine.runner.paused ? icon.dataset.on : icon.dataset.off;
+            const icon = /** @type {HTMLImageElement} */ ($("pause-icon"));
+            icon.src = (machine.runner.paused ? icon.dataset.on : icon.dataset.off) || "";
             this.machine.ui.i8080disasm.go_code(machine.cpu.pc);
         });
 
         // disassembler
 
-        document.getElementById("disasm_form_code_shift_back_page").addEventListener("click", () => {
+        $("disasm_form_code_shift_back_page").addEventListener("click", () => {
             this.machine.ui.i8080disasm.form_code_shift(false, -1);
         });
-        document.getElementById("disasm_form_code_shift_back_one").addEventListener("click", () => {
+        $("disasm_form_code_shift_back_one").addEventListener("click", () => {
             this.machine.ui.i8080disasm.form_code_shift(true, -1);
         });
-        document.getElementById("disasm_form_go_code").addEventListener("click", () => {
+        $("disasm_form_go_code").addEventListener("click", () => {
             this.machine.ui.i8080disasm.form_go_code();
         });
-        document.getElementById("disasm_form_code_shift_forward_one").addEventListener("click", () => {
+        $("disasm_form_code_shift_forward_one").addEventListener("click", () => {
             this.machine.ui.i8080disasm.form_code_shift(true, 1);
         });
-        document.getElementById("disasm_form_code_shift_forward_page").addEventListener("click", () => {
+        $("disasm_form_code_shift_forward_page").addEventListener("click", () => {
             this.machine.ui.i8080disasm.form_code_shift(false, 1);
         });
 
-        document.getElementById("disasm_form_data_shift_back_one").addEventListener("click", () => {
+        $("disasm_form_data_shift_back_one").addEventListener("click", () => {
             this.machine.ui.i8080disasm.go_data_shift(-1, { one: true });
         });
-        document.getElementById("disasm_form_data_shift_back_page").addEventListener("click", () => {
+        $("disasm_form_data_shift_back_page").addEventListener("click", () => {
             this.machine.ui.i8080disasm.go_data_shift(-1);
         });
-        document.getElementById("disasm_form_go_data").addEventListener("click", () => {
+        $("disasm_form_go_data").addEventListener("click", () => {
             this.machine.ui.i8080disasm.form_go_data();
         });
-        document.getElementById("disasm_form_data_shift_forward_page").addEventListener("click", () => {
+        $("disasm_form_data_shift_forward_page").addEventListener("click", () => {
             this.machine.ui.i8080disasm.go_data_shift(1);
         });
-        document.getElementById("disasm_form_data_shift_forward_one").addEventListener("click", () => {
+        $("disasm_form_data_shift_forward_one").addEventListener("click", () => {
             this.machine.ui.i8080disasm.go_data_shift(1, { one: true });
         });
 
-        document
-            .getElementById("upload")
-            .addEventListener("click", () => document.querySelector("#upload_selector").click());
+        const hint = $("hint");
 
-        const hint = document.getElementById("hint");
-        document.querySelectorAll("button.icon").forEach((button) => {
+        document.querySelectorAll("button.icon").forEach((element) => {
+            const button = /** @type {HTMLButtonElement} */ (element);
             button.addEventListener("mouseover", () => {
-                hint.style.opacity = 1;
-                hint.textContent = button.dataset.text;
+                hint.style.opacity = "1";
+                hint.textContent = button.dataset.text || "-";
             });
             button.addEventListener("mouseout", () => {
-                hint.style.opacity = 0;
+                hint.style.opacity = "0";
                 hint.textContent = "";
             });
         });
@@ -457,13 +457,10 @@ export class UI {
         });
 
         $("emulator_snapshot").addEventListener("click", () => this.emulator_snapshot());
-        //     const json = rk86_snapshot(this.machine, "2.0.0");
-        //     const filename = `${this.computer_snapshot_name}-${this.computer_snapshot_count}.json`;
-        //     const blob = new Blob([json], { type: "application/json" });
-        //     saveAs(blob, filename);
-        //     this.computer_snapshot_count += 1;
-        // });
 
+        /**
+         * @param {string} url
+         */
         const openLink = (url) => {
             const link = document.createElement("a");
             link.href = url;
@@ -478,29 +475,38 @@ export class UI {
     }
 
     update_activity_indicator = (active) => {
-        document.getElementById("tape_activity_indicator").style.visibility = active ? "visible" : "hidden";
+        $("tape_activity_indicator").style.visibility = active ? "visible" : "hidden";
     };
 
+    /**
+     * @param {number} count
+     */
     update_written_bytes = (count) => {
-        document.getElementById("tape_written_bytes").textContent = count.toString().padStart(4, "0");
+        $("tape_written_bytes").textContent = count.toString().padStart(4, "0");
         if (count === 1) this.hightlight_written_bytes(true);
         else if (count === 0) this.hightlight_written_bytes(false);
     };
 
+    tape_activity_indicator = /** @type {HTMLImageElement} */ ($("tape_activity_indicator"));
+    /**
+     * @param {boolean} on
+     */
     hightlight_written_bytes = (on) => {
-        document.getElementById("tape_written_bytes").classList.toggle("tape_active", on);
-        document.getElementById("tape_activity_indicator").src = on ? "i/tape-data.svg" : "i/tape-preamble.svg";
+        $("tape_written_bytes").classList.toggle("tape_active", on);
+        this.tape_activity_indicator.src = on ? "i/tape-data.svg" : "i/tape-preamble.svg";
     };
 }
 
 export async function main() {
+    // @ts-ignore
+    window.CONSOLE = "console";
+
     const keyboard = new Keyboard();
     const io = new IO();
 
     /** @type {{ font: string, keyboard: Keyboard, io: IO, ui: UI }} */
     const machine = {
         font: rk86_font_image(),
-        //
         keyboard,
         io,
     };
@@ -671,20 +677,19 @@ export async function main() {
     async function loadAutoexecFile(name) {
         const content = await fetch_file(name);
         if (!content) return;
-        putFileToMemory(name, content);
+        parseAndPlaceFile(name, content);
     }
 
-    let selected_file_name = "";
-    let selected_file_entry = -1;
+    /** @type {import('./rk86_file_parser.js').File|undefined} */
+    let selected_file;
 
     /**
      * @param {string} name
      * @param {number[]} binary
-     * @returns {import('./rk86_file_parser.js').File|undefined}
+     * @returns {void}
      */
-    function putFileToMemory(name, binary) {
-        selected_file_name = "";
-        selected_file_entry = -1;
+    function parseAndPlaceFile(name, binary) {
+        selected_file = undefined;
 
         console.log(`размещаем файл [${name}] длиной ${binary.length} в память эмулятора`);
         const json = FileParser.is_json(binary);
@@ -696,15 +701,13 @@ export async function main() {
         try {
             const file = FileParser.parse_rk86_binary(name, binary);
             machine.memory.load_file(file);
-            selected_file_name = file.name;
-            selected_file_entry = file.entry;
             console.log(
                 `` +
                     `загружен файл [${name}] ` +
                     `c адреса ${hex16(file.start, "0x")} по ${hex16(file.end, "0x")}, ` +
                     `запуск: G${file.entry.toString(16)}`
             );
-            return file;
+            selected_file = file;
         } catch (e) {
             console.error(e);
         }
@@ -768,107 +771,119 @@ export async function main() {
         $("catalog_files").appendChild(option);
     }
 
-    $("file_selector").addEventListener("keyup", (event) => {
+    const catalog_selector = /** @type {HTMLInputElement} */ ($("catalog_selector"));
+
+    catalog_selector.addEventListener("keyup", (event) => {
         if (event.key === "Escape") {
-            $("file_selector").value = "";
-            $("file_selector").blur();
+            catalog_selector.value = "";
+            selected_file = undefined;
+            UI.hide("catalog_selector");
+            UI.hide("selected_file");
         }
-        event.stopPropagation();
+        if (event.key === "Enter") {
+            catalog_selector.blur();
+        }
     });
 
-    $("file_selector").addEventListener("keydown", (event) => event.stopPropagation());
+    catalog_selector.addEventListener("keydown", (event) => event.stopPropagation());
 
-    $("file_selector").addEventListener("blur", (event) => {
-        selected_file_name = $("file_selector").value;
-        $("selected_file").textContent = selected_file_name;
-        $("file_selector").style.display = "none";
-        $("selected_file").style.display = selected_file_name ? "block" : "none";
-        event.stopPropagation();
+    catalog_selector.addEventListener("blur", async (event) => {
+        const name = catalog_selector.value.trim();
+        if (!name) return;
+
+        await load_catalog_file_from_selector();
+        $("selected_file").textContent = selected_file?.name || "";
+
+        UI.hide("catalog_selector");
+        UI.setVisibility("selected_file", selected_file !== undefined);
     });
 
-    $("file_selector").addEventListener("change", (event) => {
+    catalog_selector.addEventListener("change", (event) => {
         event.stopPropagation();
-        $("file_selector").blur();
+        $("catalog_selector").blur();
     });
 
-    $("upload_selector").addEventListener("change", async (event) => {
+    const upload_selector = /** @type {HTMLInputElement} */ ($("upload_selector"));
+
+    upload_selector.addEventListener("change", async (event) => {
         event.stopPropagation();
-        const file = $("upload_selector").files[0];
-        console.log(`загружаем внешний файл [${file.name}]`);
-        if (!file) return;
+        if (!upload_selector.files || upload_selector.files.length === 0) {
+            console.warn("нет загруженных файлов");
+            return;
+        }
+        const uploadedFile = upload_selector.files[0];
+        console.log(`загружаем внешний файл [${uploadedFile.name}]`);
+
         const reader = new FileReader();
+
         reader.onload = async (e) => {
             const data = e.target?.result;
             if (!(data instanceof ArrayBuffer)) {
                 console.error("%cошибка: данные не являются ArrayBuffer", "color: red");
                 return;
             }
-            const binary = new Uint8Array(data);
-            console.log(`загружен внешний файл ${file.name}, размер ${binary.length} байт`);
+            const binary = Array.from(new Uint8Array(data));
+            console.log(`загружен внешний файл [${uploadedFile.name}], размер ${binary.length} байт`);
             try {
-                putFileToMemory(file.name, binary);
+                parseAndPlaceFile(uploadedFile.name, binary);
+                if (!selected_file) return;
 
-                $("selected_file").textContent = selected_file_name;
-                $("selected_file").style.display = "block";
-            } catch (error) {
-                // Handle any errors that occur during file processing
-                console.error(`Error loading file: ${error.message}`);
-                alert(`Ошибка загрузки файла: ${error.message}`);
+                $("selected_file").textContent = selected_file.name;
+                UI.show("selected_file");
+            } catch (e) {
+                const error = e instanceof Error ? e : new Error("неизвестная ошибка при загрузке файла");
+                console.error(`ошибка загрузки файла: ${error.message}`);
+                alert(`ошибка загрузки файла: ${error.message}`);
             }
         };
-        reader.onerror = (error) => {
-            console.error(`ошибка при загрузке внешнего файла: ${error.message}`);
-            alert(`ошибка при загрузке внешнего файла: ${error.message}`);
+        reader.onerror = () => {
+            console.error(`ошибка при загрузке внешнего файла`);
+            alert(`ошибка при загрузке внешнего файла`);
         };
-        reader.readAsArrayBuffer(file);
+        reader.readAsArrayBuffer(uploadedFile);
 
-        $("upload_selector").value = "";
-        $("file_selector").value = selected_file_name;
-        $("selected_file").style.display = "none";
+        upload_selector.value = "";
+        catalog_selector.value = uploadedFile.name;
+        UI.hide("selected_file");
     });
-
-    const selected_file_element = $("selected_file");
-
-    if (selected_file_name) {
-        selected_file_element.textContent = selected_file_name;
-        selected_file_element.style.display = "block";
-    }
 
     /**
-     * @returns {Promise<import('./rk86_file_parser.js').File|undefined>}
+     * @returns {Promise<void>}
      */
     async function load_catalog_file_from_selector() {
-        if (!selected_file_name) return alert("Hе выбран файл для загрузки."), undefined;
-        const filename = selected_file_name;
-        console.log(`файл [${filename}] выбран для загрузки`);
-        const content = await fetch_file(filename);
-        if (!content) return undefined;
-        const file = putFileToMemory(filename, content);
-        // machine.memory.load_file(file);
-        // console.log(`файл [${filename}] помещен в память эмулятора`);
-        return file;
+        const name = catalog_selector.value.trim();
+        if (!name) return alert("Hе выбран файл для загрузки.");
+
+        console.log(`файл [${name}] выбран для загрузки`);
+
+        const content = await fetch_file(name);
+        if (!content) return;
+
+        parseAndPlaceFile(name, content);
     }
 
-    $("load").addEventListener("click", async () => {
-        const file = await load_catalog_file_from_selector();
-        if (!file) return;
-        alert(
-            [
-                `загружен файл [${file.name}]`,
-                `с адреса ${hex16(file.start, "0x")} по ${hex16(file.end, "0x")}`,
-                `запуск: G${hex16(file.entry)}`,
-            ].join("\n")
-        );
-    });
+    // $("load").addEventListener("click", async () => {
+    //     if (selected_file) return;
+    //     await load_catalog_file_from_selector();
+    //     if (!selected_file) return;
+    //     const { name, start, end, entry } = selected_file;
+    //     alert(
+    //         [
+    //             `загружен файл [${name}]`,
+    //             `с адреса ${hex16(start, "0x")} по ${hex16(end, "0x")}`,
+    //             `запуск: G${hex16(entry)}`,
+    //         ].join("\n")
+    //     );
+    // });
 
     $("run").addEventListener("click", async () => {
-        if (selected_file_entry >= 0) {
-            machine.cpu.jump(selected_file_entry);
+        if (selected_file) {
+            machine.cpu.jump(selected_file.entry);
             return;
         }
-        const file = await load_catalog_file_from_selector();
-        if (!file) return;
-        machine.cpu.jump(file.entry);
+        await load_catalog_file_from_selector();
+        if (!selected_file) return;
+        machine.cpu.jump(selected_file.entry);
     });
 
     machine.ui.i8080disasm = new I8080DisasmPanel(machine.memory);

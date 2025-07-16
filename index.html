@@ -91,7 +91,7 @@
                     <button id="tape" class="icon" data-text="Запись на ленту">
                         <img class="icon" id="tape_activity_indicator" src="" style="visibility: hidden" />
                     </button>
-                    <button id="catalog" class="icon" data-text="Выбрать файл из каталога">
+                    <button id="catalog_button" class="icon" data-text="Выбрать файл из каталога">
                         <img class="icon" src="i/catalog.svg" />
                     </button>
                     <input id="upload_selector" style="display: none" type="file" />
@@ -99,14 +99,14 @@
                         <img class="icon" src="i/upload.svg" />
                     </button>
                     <span id="selected_file" style="width: fit-content; display: none"></span>
-                    <input id="file_selector" list="catalog_files" style="display: none" />
+                    <input id="catalog_selector" list="catalog_files" style="display: none" />
                     <datalist id="catalog_files"></datalist>
                     <button id="run" class="icon" data-text="Запустить программу">
                         <img class="icon" src="i/run.svg" />
                     </button>
-                    <button id="load" class="icon" data-text="Загрузить программу в память">
+                    <!-- <button id="load" class="icon" data-text="Загрузить программу в память">
                         <img class="icon" src="i/load.svg" />
-                    </button>
+                    </button> -->
                     <button id="assembler_toggle" class="icon" data-text="Ассемблер">
                         <img class="icon" id="assembler_icon" src="i/asm.svg" />
                     </button>

@@ -48,7 +48,7 @@ export class Tape {
             console.error("sync byte E6 is not found");
             this.log(this.written_bytes);
         } else {
-            console.log(`%c${sync_byte_index} bytes before sync byte`, "color: blue");
+            console.log(`${sync_byte_index} bytes before sync byte`);
             const bytes = this.written_bytes.slice(sync_byte_index);
             this.log(bytes);
             this.save(bytes);
