@@ -6,12 +6,16 @@ export class Tape {
         this.bit_started = false;
         this.bit_count = 0;
         this.current_byte = 0;
+        /**  @type {number[]} */
         this.written_bytes = [];
         this.written_bytes_from_e6 = 0;
         this.output_block_count = 0;
         this.output_timer = null;
     }
 
+    /**
+     * @param {number[]} bytes
+     */
     save(bytes) {
         const binary = new Uint8Array(bytes);
         const blob = new Blob([binary], { type: "image/gif" });
@@ -20,6 +24,9 @@ export class Tape {
         this.output_block_count += 1;
     }
 
+    /**
+     * @param {number[]} bytes
+     */
     log(bytes) {
         for (let i = 0; i < bytes.length; i += 16) {
             const line = bytes.slice(i, i + 16);
@@ -105,6 +112,10 @@ export class Tape {
         this.previous_bit_ticks = runner_ticks;
     };
 
+    /**
+     * @param {Blob} blob
+     * @param {string} filename
+     */
     static saveAs(blob, filename) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
