@@ -56,6 +56,10 @@ export class Tape {
         this.write_ended();
     };
 
+    /**
+     * @param {boolean} bit
+     * @returns {void}
+     */
     write_bit = (bit) => {
         const runner_ticks = this.machine.runner.total_ticks;
         const time = runner_ticks - this.previous_bit_ticks;
@@ -82,8 +86,13 @@ export class Tape {
                     this.written_bytes_from_e6 += 1;
                 }
 
-                if (this.written_bytes.length === 1) this.machine.ui.update_activity_indicator(true);
-                this.machine.ui.update_written_bytes(this.written_bytes_from_e6);
+                if (this.written_bytes.length === 1) {
+                    this.machine.ui.update_activity_indicator(true);
+                    this.machine.ui.update_written_bytes(0);
+                }
+
+                if (this.written_bytes_from_e6 === 1) this.machine.ui.hightlight_written_bytes(true);
+                if (this.written_bytes_from_e6 > 0) this.machine.ui.update_written_bytes(this.written_bytes_from_e6);
 
                 if (this.output_timer) clearTimeout(this.output_timer);
                 this.output_timer = setTimeout(this.flush, 1000);

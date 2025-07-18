@@ -75,7 +75,8 @@
                     <img class="icon" src="i/power-off.svg" />
                 </button>
                 <button id="pause" class="icon" data-text="Приостановить процессор">
-                    <img id="pause-icon" data-on="i/paused.svg" data-off="i/pause.svg" class="icon" src="i/pause.svg" />
+                    <img id="pause_icon" class="icon" src="i/pause.svg" />
+                    <img id="pause_icon_paused" style="display: none" class="icon" src="i/paused.svg" />
                 </button>
                 <button id="fullscreen" class="icon" data-text="Полноэкранный режим">
                     <img class="icon" src="i/fullscreen.svg" />
@@ -86,10 +87,13 @@
                 <button id="help" class="icon" data-text="Помощь">
                     <img class="icon" src="i/help.svg" />
                 </button>
-                <!-- Кнопка справа -->
+                <!-- Кнопки справа -->
                 <div style="margin-left: auto; display: flex; align-items: center; gap: 4px">
                     <button id="tape" class="icon" data-text="Запись на ленту">
-                        <img class="icon" id="tape_activity_indicator" src="" style="visibility: hidden" />
+                        <div id="tape_activity_indicator">
+                            <img class="icon" id="tape_data" src="i/tape-data.svg" style="display: none" />
+                            <img class="icon" id="tape_preamble" src="i/tape-preamble.svg" style="display: none" />
+                        </div>
                     </button>
                     <button id="catalog_button" class="icon" data-text="Выбрать файл из каталога">
                         <img class="icon" src="i/catalog.svg" />
@@ -104,9 +108,6 @@
                     <button id="run" class="icon" data-text="Запустить программу">
                         <img class="icon" src="i/run.svg" />
                     </button>
-                    <!-- <button id="load" class="icon" data-text="Загрузить программу в память">
-                        <img class="icon" src="i/load.svg" />
-                    </button> -->
                     <button id="assembler_toggle" class="icon" data-text="Ассемблер">
                         <img class="icon" id="assembler_icon" src="i/asm.svg" />
                     </button>
@@ -129,16 +130,11 @@
                         <img class="icon" id="terminal_icon" src="i/terminal.svg" />
                     </button>
                     <button id="sound_toggle" class="icon" data-text="Включить/выключить звук">
-                        <img
-                            id="sound_icon_toggle"
-                            data-muted="i/sound-muted.svg"
-                            data-on="i/sound.svg"
-                            class="icon"
-                            src="i/sound-muted.svg"
-                        />
+                        <img id="sound_toggle_icon" class="icon" style="display: none" src="i/sound.svg" />
+                        <img id="sound_toggle_icon_muted" class="icon" src="i/sound-muted.svg" />
                     </button>
                     <style>
-                        #sound_icon {
+                        #sound_image {
                             position: fixed;
                             left: 50%;
                             top: 50%;
@@ -149,11 +145,11 @@
                             pointer-events: none;
                             z-index: 2000;
                         }
-                        #sound_icon.visible {
+                        #sound_image.visible {
                             opacity: 1;
                         }
                     </style>
-                    <span id="sound_icon" data-on="🔉" data-off="🔇">🔉</span>
+                    <span id="sound_image" data-on="🔉" data-off="🔇"></span>
                     <button id="ruslat_toggle">
                         <span id="ruslat" style="font-family: monospace">ЛАТ</span>
                     </button>

@@ -148,15 +148,15 @@ export class UI {
      * @param {string} element
      * @param {boolean} visible
      */
-    static setVisibility(element, visible) {
+    static visibility(element, visible) {
         $(element).style.display = visible ? "block" : "none";
     }
 
     /** @param {string} element */
-    static hide = (element) => UI.setVisibility(element, false);
+    static hide = (element) => UI.visibility(element, false);
 
     /** @param {string} element */
-    static show = (element) => UI.setVisibility(element, true);
+    static show = (element) => UI.visibility(element, true);
 
     /**
      * @param {string} element
@@ -164,7 +164,7 @@ export class UI {
      */
     static toggleVisibility(element) {
         const visible = UI.isVisible(element);
-        UI.setVisibility(element, !visible);
+        UI.visibility(element, !visible);
         return !visible;
     }
 
@@ -195,7 +195,7 @@ export class UI {
         const visible = UI.toggleVisibility("assembler_panel");
         UI.toggleIcon("assembler_toggle");
 
-        UI.setVisibility("canvas", !visible);
+        UI.visibility("canvas", !visible);
 
         visible ? $("assembler_panel").focus() : $("canvas").focus();
     }
@@ -261,14 +261,14 @@ export class UI {
 
             this.machine.runner.init_sound(sound_enabled);
 
-            const toggle = /** @type {HTMLImageElement} */ ($("sound_icon_toggle"));
-            toggle.src = /** @type {string} */ (sound_enabled ? toggle.dataset.on : toggle.dataset.muted);
+            UI.visibility("sound_toggle_icon", sound_enabled);
+            UI.visibility("sound_toggle_icon_muted", !sound_enabled);
 
-            const icon = $("sound_icon");
-            icon.textContent = /** @type {string} */ (icon.dataset[sound_enabled ? "on" : "off"]);
+            const image = $("sound_image");
+            image.textContent = /** @type {string} */ (image.dataset[sound_enabled ? "on" : "off"]);
 
-            icon.classList.add("visible");
-            setTimeout(() => icon.classList.remove("visible"), 2000);
+            image.classList.add("visible");
+            setTimeout(() => image.classList.remove("visible"), 2000);
         });
 
         $("catalog_button").addEventListener("click", () => {
@@ -389,8 +389,8 @@ export class UI {
 
         $("pause").addEventListener("click", () => {
             machine.runner.paused = !machine.runner.paused;
-            const icon = /** @type {HTMLImageElement} */ ($("pause-icon"));
-            icon.src = (machine.runner.paused ? icon.dataset.on : icon.dataset.off) || "";
+            UI.visibility("pause_icon_paused", machine.runner.paused);
+            UI.visibility("pause_icon", !machine.runner.paused);
             this.machine.ui.i8080disasm.go_code(machine.cpu.pc);
         });
 
@@ -474,8 +474,11 @@ export class UI {
         $("keyboard_toggle").addEventListener("click", () => this.toggle_keyboard());
     }
 
+    /**
+     * @param {boolean} active
+     */
     update_activity_indicator = (active) => {
-        $("tape_activity_indicator").style.visibility = active ? "visible" : "hidden";
+        UI.visibility("tape_activity_indicator", active);
     };
 
     /**
@@ -483,17 +486,15 @@ export class UI {
      */
     update_written_bytes = (count) => {
         $("tape_written_bytes").textContent = count.toString().padStart(4, "0");
-        if (count === 1) this.hightlight_written_bytes(true);
-        else if (count === 0) this.hightlight_written_bytes(false);
     };
 
-    tape_activity_indicator = /** @type {HTMLImageElement} */ ($("tape_activity_indicator"));
     /**
      * @param {boolean} on
      */
     hightlight_written_bytes = (on) => {
         $("tape_written_bytes").classList.toggle("tape_active", on);
-        this.tape_activity_indicator.src = on ? "i/tape-data.svg" : "i/tape-preamble.svg";
+        UI.visibility("tape_data", on);
+        UI.visibility("tape_preamble", !on);
     };
 }
 
@@ -795,7 +796,7 @@ export async function main() {
         $("selected_file").textContent = selected_file?.name || "";
 
         UI.hide("catalog_selector");
-        UI.setVisibility("selected_file", selected_file !== undefined);
+        UI.visibility("selected_file", selected_file !== undefined);
     });
 
     catalog_selector.addEventListener("change", (event) => {
