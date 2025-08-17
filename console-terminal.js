@@ -11,7 +11,7 @@ class ConsoleTerminal extends HTMLElement {
     historyIndex = 0;
 
     /**  @type {function(string): void} */
-    onCommand = (cmd) => {
+    run = (cmd) => {
         this.put(`RUN [${cmd}]`);
     };
 
@@ -29,10 +29,11 @@ class ConsoleTerminal extends HTMLElement {
                     grid-template-rows: auto 1fr;
                 }
                 #output {
-                    height: 20em;
+                    height: 30em;
                     background-color: black;
                     color: lightgreen;
                     overflow-y: auto;
+                    margin-bottom: 0.5em;
                 }
                 #debug {
                     display: grid;
@@ -60,6 +61,7 @@ class ConsoleTerminal extends HTMLElement {
         this.$output = this.shadowRoot.getElementById("output");
         // /** @type {!HTMLInputElement} */
         this.$input = /** @type {!HTMLInputElement} */ (this.shadowRoot.getElementById("input"));
+        this.pin = this.$input;
         this.$history = this.shadowRoot.getElementById("history");
 
         this.$input?.focus();
@@ -92,7 +94,7 @@ class ConsoleTerminal extends HTMLElement {
                     if (!cmd) return;
                     this.$input.value = "";
                     this.put(`${cmd}`);
-                    if (this.onCommand) this.onCommand(cmd);
+                    this.run(cmd);
 
                     if (this.historyIndex === 0 && this.history[0] === cmd) return;
 

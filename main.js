@@ -5,6 +5,7 @@ import Visualizer from "./i8080_visualizer.js";
 import I8080DisasmPanel from "./i8080disasm_panel.js";
 import * as KeyboardVisualizer from "./kbd-js.js";
 import moveable from "./moveable.js";
+import CLI from "./rk86_cli.js";
 import * as FileParser from "./rk86_file_parser.js";
 import { rk86_font_image } from "./rk86_font.js";
 import { Keyboard } from "./rk86_keyboard.js";
@@ -281,13 +282,14 @@ export class UI {
 
         moveable($("disassembler_panel"))();
         moveable($("visualizer_panel"))();
-        moveable($("terminal_panel"))();
+        moveable($("terminal_panel"), "input")();
         moveable($("keyboard_panel"))();
 
         // keyboard dispatcher
 
         document.onkeydown = (event) => {
             if (this.command_mode) {
+                event.preventDefault();
                 switch (event.code) {
                     case "KeyL":
                         $("catalog_button").click();
@@ -884,10 +886,14 @@ export async function main() {
     machine.ui.i8080disasm = new I8080DisasmPanel(machine.memory);
     window.i8080disasm = machine.ui.i8080disasm;
 
+    machine.cli = new CLI(machine);
+
     machine.ui.terminal = $("terminal_panel");
-    $("terminal_panel").onCommand = (cmd) => {
-        console.log(`command received: ${cmd}`);
+    $("terminal_panel").run = (cmd) => {
+        console.log(`команда: ${cmd}`);
+        machine.cli.run(cmd);
     };
+    $("terminal_panel").put("консоль подключена");
 
     machine.ui.start_update_perf();
 

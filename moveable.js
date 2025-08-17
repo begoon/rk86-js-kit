@@ -4,6 +4,12 @@ const make = (element) => {
         let offsetY = 0;
         let isDragging = false;
 
+        let hook = element;
+
+        if (element.shadowRoot?.getElementById("input")) {
+            hook = element.shadowRoot.getElementById("input");
+        }
+
         const onMouseMove = (e) => {
             if (!isDragging) return;
 
@@ -30,7 +36,7 @@ const make = (element) => {
             document.removeEventListener("mouseup", onMouseUp);
         };
 
-        element.addEventListener("mousedown", (e) => {
+        hook.addEventListener("mousedown", (e) => {
             isDragging = true;
 
             offsetX = e.clientX - element.offsetLeft;
