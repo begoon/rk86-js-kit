@@ -5,7 +5,7 @@ import {
     extract_rk86_word,
     file_ext,
     is_hex_file,
-    is_json,
+    parse,
     parse_rk86_binary,
 } from "../rk86_file_parser.js";
 
@@ -27,15 +27,15 @@ test("recognize the signature followed by newline", () => {
     expect(is_hex_file(toArray("#!rk86\n"))).toBe(true);
 });
 
-test("is_json file", () => {
-    expect(is_json(null)).toBe(false);
-    expect(is_json(undefined)).toBe(false);
-    expect(is_json([1])).toBe(false);
-    expect(is_json(toArray("{}"))).toEqual({});
-    expect(is_json(toArray('{"id": "rk86"}'))).toEqual({ id: "rk86" });
-    expect(is_json(toArray("{}"))).toEqual({});
-    expect(is_json(new Uint8Array(toArray("{}")))).toEqual({});
-    expect(is_json(new Uint8Array(toArray('{"a": 1}')))).toEqual({ a: 1 });
+test("parse file", () => {
+    expect(parse(null)).toEqual({ ok: false });
+    expect(parse(undefined)).toEqual({ ok: false });
+    expect(parse([1])).toEqual({ ok: false });
+    expect(parse(toArray("{}"))).toEqual({ ok: true, json: {} });
+    expect(parse(toArray('{"id": "rk86"}'))).toEqual({ ok: true, json: { id: "rk86" } });
+    expect(parse(toArray("{}"))).toEqual({ ok: true, json: {} });
+    expect(parse(new Uint8Array(toArray("{}")))).toEqual({ ok: true, json: {} });
+    expect(parse(new Uint8Array(toArray('{"a": 1}')))).toEqual({ ok: true, json: { a: 1 } });
 });
 
 test("convert multiline line with signature", () => {
@@ -167,7 +167,7 @@ test("parse_rk86_binary variations", () => {
 
 test("throws when file is too long", () => {
     expect(() => parse_rk86_binary("long.pki", new Array(0x10001))).toThrow(
-        "ошибка: длина файла [long.pki] 65537 превышает 65556"
+        "ошибка: длина файла [long.pki] 65537 превышает 65556",
     );
 });
 

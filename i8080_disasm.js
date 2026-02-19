@@ -1,5 +1,25 @@
 import { hex16, hex8 } from "./hex.js";
 
+/**
+ * @typedef {object} I8080Instruction
+ * @property {string} cmd
+ * @property {number} length
+ * @property {string} [arg1]
+ * @property {string} [arg2]
+ * @property {boolean} [data1]
+ * @property {boolean} [data2]
+ * @property {boolean} [code]
+ * @property {boolean} [bad]
+ * @property {string} [instr]
+ */
+
+/**
+ *
+ * @param {number} opcode
+ * @param {number} byte2
+ * @param {number} byte3
+ * @returns {I8080Instruction}
+ */
 export function i8080_opcode(opcode, byte2, byte3) {
     const imm8_ = byte2 & 0xff;
     const imm16_ = imm8_ | ((byte3 & 0xff) << 8);
@@ -7,6 +27,9 @@ export function i8080_opcode(opcode, byte2, byte3) {
     const imm8 = hex8(imm8_);
     const imm16 = hex16(imm16_);
 
+    /**
+     * @type {Record<number, I8080Instruction>}
+     */
     const opcodes = {
         0x00: { cmd: "NOP", length: 1 },
         0x01: { cmd: "LXI", length: 3, arg1: "B", arg2: imm16, data2: true },

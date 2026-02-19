@@ -30,15 +30,20 @@ export const to_text = (binary) => binary.reduce((a, x) => a + String.fromCharCo
 export const is_hex_file = (image) => to_text(image.slice(0, 6)) === "#!rk86";
 
 /**
- * @param {number[]} binary
- * @returns {boolean}
+ * @typedef {Object} ParseResult
+ * @property {boolean} ok
+ * @property {any} [json]
  */
-export const is_json = (binary) => {
+/**
+ * @param {number[]} binary
+ * @returns {ParseResult}
+ */
+export const parse = (binary) => {
     try {
         const text = to_text(binary);
-        return JSON.parse(text);
+        return { ok: true, json: JSON.parse(text) };
     } catch {
-        return false;
+        return { ok: false };
     }
 };
 

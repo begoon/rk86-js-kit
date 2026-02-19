@@ -102,6 +102,8 @@ class ConsoleTerminal extends HTMLElement {
                     if (this.history.length > ConsoleTerminal.HISTORY_SIZE) this.history.pop();
                     this.historyIndex = 0;
 
+                    window.terminalHistory = this.history;
+
                     this.printHistory();
                     break;
                 case "ArrowUp":

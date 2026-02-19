@@ -7,7 +7,7 @@ run:
     bun run --watch main.ts
 
 test-watch:
-    bun test --watch
+    bun test --watch --only-failures
 
 test-js:
     bun test

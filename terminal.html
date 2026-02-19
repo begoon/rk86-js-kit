@@ -74,6 +74,7 @@
                         if (historyIndex === 0 && history[0] === cmd) return;
 
                         history.unshift(cmd);
+                        $("history").innerHTML = "";
                         if (history.length > HISTORY_SIZE) history.pop();
                         historyIndex = 0;
 

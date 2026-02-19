@@ -1,24 +1,45 @@
 ﻿import "./format.js";
 import { hex16 } from "./hex.js";
 import { i8080_opcode } from "./i8080_disasm.js";
+import { rk86_check_sum } from "./rk86_check_sum.js";
 import { saveAs } from "./saver.js";
 
 /**
- * @param {string} input
- * @param {number=} default_value
- * @returns {number}
+ * @param {string} id
+ * @returns {!HTMLElement}
+ */
+const $ = (id) => {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`element "${id}" not found`);
+    return element;
+};
+
+/**
+ * @param {string | undefined} input
+ * @param {number | undefined} default_value
+ * @returns {number | NaN}
  */
 export function parseNumber(input, default_value = undefined) {
     let str = input;
-    if (typeof str !== "string" || str.length === 0) return default_value !== undefined ? default_value : NaN;
-    str = str.trim();
+    if (typeof str !== "string" || str.length === 0) {
+        if (default_value === undefined) return NaN;
+        return default_value;
+    }
+    const value = parse(str);
+    return isNaN(value) && default_value !== undefined ? default_value : value;
+}
+
+/**
+ * @param {string} v
+ * @returns {number | NaN}
+ */
+function parse(v) {
+    let str = v.trim().toLowerCase();
     if (str.startsWith("$")) str = "0x" + str.slice(1);
     else if (str.startsWith("0x")) str = str;
     else if (str.endsWith("h")) str = "0x" + str.slice(0, -1);
     else if (str.search(/[a-f]/i) >= 0) str = "0x" + str;
-    const value = parseInt(str);
-    if (isNaN(value) && default_value !== undefined) return default_value;
-    return value;
+    return parseInt(str);
 }
 
 /**
@@ -38,6 +59,7 @@ export default class CLI {
         ["П", "Я", "Р", "С", "Т", "У", "Ж", "В", "Ь", "Ы", "З", "Ш", "Э", "Щ", "Ч", "~"],
     ].flat();
 
+    /** @param {import("./rk86_machine.js").Machine} machine */
     constructor(machine) {
         this.machine = machine;
 
@@ -53,8 +75,11 @@ export default class CLI {
         this.stop_after_next_instruction = -1;
         this.step_over_address = -1;
 
+        /**
+         * @type {{[n: number]: Breakpoint | null}}
+         */
         this.breaks = {
-            1: { type: "exec", address: 0xf86c, active: "no", count: 0, hits: 0 },
+            1: { type: "exec", address: 0xf86c, active: "yes", count: 0, hits: 0 },
             2: { type: "read", address: 0x0100, active: "no", count: 0, hits: 0 },
             3: { type: "write", address: 0x0200, active: "no", count: 0, hits: 0 },
             4: { type: "exec", address: 0xfca5, active: "no", count: 7, hits: 0 },
@@ -88,6 +113,7 @@ export default class CLI {
         };
     }
 
+    /** @param {string[]} args */
     help_cmd(args) {
         const commands = this.commands;
         for (let cmd of Object.keys(commands)) {
@@ -96,6 +122,7 @@ export default class CLI {
         }
     }
 
+    /** @param {string[]} args */
     dump_cmd(args) {
         let from = parseNumber(args[0], this.dump_cmd_last_address);
         let sz = parseNumber(args[1], this.dump_cmd_last_length);
@@ -125,6 +152,7 @@ export default class CLI {
         this.dump_cmd_last_address = from;
     }
 
+    /** @param {string[]} args */
     download_cmd(args) {
         this.download_cmd_snapshot_address = parseNumber(args[0], this.download_cmd_snapshot_address);
         this.download_cmd_snapshot_length = parseNumber(args[1], this.download_cmd_snapshot_length);
@@ -143,7 +171,10 @@ export default class CLI {
         );
 
         const { memory } = this.machine;
-        const content = memory.snapshot(this.download_cmd_snapshot_address, this.download_cmd_snapshot_address);
+        const content = memory.snapshot(
+            this.download_cmd_snapshot_address,
+            this.download_cmd_snapshot_address + this.download_cmd_snapshot_length,
+        );
         const blob = new Blob([new Uint8Array(content)], { type: "application/octet-stream" });
 
         saveAs(blob, filename);
@@ -152,7 +183,7 @@ export default class CLI {
     /**
      * @param {number} address
      * @param {number} nb_instr
-     * @param {number} current_addr
+     * @param {number} [current_addr]
      * @returns {number}
      */
     disasm_print(address, nb_instr, current_addr) {
@@ -162,7 +193,8 @@ export default class CLI {
         while (n-- > 0) {
             let binary = [];
             for (let i = 0; i < 3; ++i) binary.push(memory.read_raw(addr + i));
-            const instr = i8080_opcode(...binary);
+            const [opcode, arg1, arg2] = binary;
+            const instr = i8080_opcode(opcode, arg1, arg2);
 
             let bytes = "";
             let chars = "";
@@ -181,9 +213,9 @@ export default class CLI {
         return addr;
     }
 
-    cpu_cmd(args) {
+    cpu_cmd() {
         const { cpu, runner, memory } = this.machine;
-        this.term.write(
+        this.put(
             "PC=%04X A=%02X F=%s%s%s%s%s HL=%04X DE=%04X BC=%04X SP=%04X".format(
                 cpu.pc,
                 cpu.a(),
@@ -198,7 +230,7 @@ export default class CLI {
                 cpu.sp,
             ),
         );
-        this.term.writeln("");
+        this.put("");
 
         const { last_instructions } = runner;
         for (let i = 0; i < last_instructions.length; ++i) {
@@ -207,15 +239,19 @@ export default class CLI {
         }
         this.disasm_print(cpu.pc, 5, cpu.pc);
 
+        /**
+         * @param {number} addr
+         * @param {string} title
+         */
         const hex = (addr, title) => {
             let bytes = "";
             let chars = "";
             for (let i = 0; i < 16; ++i) {
                 const byte = memory.read_raw(addr + i);
                 bytes += "%02X ".format(byte);
-                chars += byte >= 32 && byte < 127 ? from_rk86_table[byte] : ".";
+                chars += byte >= 32 && byte < 127 ? CLI.from_rk86_table[byte] : ".";
             }
-            this.term.writeln("%s=%04X: %s | %s".format(title, addr, bytes, chars));
+            this.put("%s=%04X: %s | %s".format(title, addr, bytes, chars));
         };
 
         hex(cpu.pc, "PC");
@@ -225,6 +261,7 @@ export default class CLI {
         hex(cpu.bc(), "BC");
     }
 
+    /** @param {string[]} args */
     disasm_cmd(args) {
         const { cpu } = this.machine;
 
@@ -238,86 +275,104 @@ export default class CLI {
         this.disasm_cmd_last_address = this.disasm_print(from, sz);
     }
 
+    /** @param {string[]} args */
     write_byte_cmd(args) {
         if (args.length < 2) {
-            this.term.write("?");
+            this.put("w start_address byte1, [byte2, [byte3]...]");
             return;
         }
 
-        let addr = parseNumber(args.shift(), 0);
+        let addr = parseNumber(args[0], 0) & 0xffff;
 
         const { memory } = this.machine;
 
-        for (let i = 0; i < args.length; ++i) {
-            const byte = parseNumber(args[i]);
+        for (let i = 1; i < args.length; ++i) {
+            const byte = parseNumber(args[i]) & 0xff;
             if (isNaN(byte)) break;
-            this.term.writeln("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), byte));
+            this.put("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), byte));
             memory.write_raw(addr, byte);
             addr = (addr + 1) & 0xffff;
         }
     }
 
+    /** @param {string[]} args */
     write_word_cmd(args) {
         if (args.length < 2) {
-            this.term.write("?");
+            this.put("ww start_address word1, [word2, [word3]...]");
             return;
         }
 
         const { memory } = this.machine;
 
-        let addr = parseNumber(args.shift(), 0);
+        let addr = parseNumber(args[0], 0) & 0xffff;
 
-        for (let i = 0; i < args.length; ++i) {
-            const w16 = parseNumber(args[i]);
+        for (let i = 1; i < args.length; ++i) {
+            const w16 = parseNumber(args[i]) & 0xffff;
             if (isNaN(w16)) break;
 
             const l = w16 & 0xff;
             const h = w16 >> 8;
 
-            this.term.writeln("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), l));
+            this.put("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), l));
             memory.write_raw(addr, l);
             addr = (addr + 1) & 0xffff;
 
-            tthis.erm.writeln("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), h));
+            this.put("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), h));
             memory.write_raw(addr, h);
             addr = (addr + 1) & 0xffff;
         }
     }
 
+    /** @param {string[]} args */
     write_char_cmd(args) {
         if (args.length < 2) {
-            this.term.write("?");
+            this.put("wc start_address string");
             return;
         }
 
         const { memory } = this.machine;
 
-        let addr = parseNumber(args.shift(), 0);
+        let addr = parseNumber(args[0], 0) & 0xffff;
 
-        const str = args[0];
-        if (!str?.length == 0) return;
+        const str = args[1];
+        if (!str?.length) return;
 
-        for (let i = 0; i < s.length; ++i) {
+        for (let i = 0; i < str.length; ++i) {
             const ch = str.charCodeAt(i) & 0xff;
 
-            this.term.writeln("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), ch));
+            this.put("%04X: %02X -> %02X".format(addr, memory.read_raw(addr), ch));
             memory.write_raw(addr, ch);
             addr = (addr + 1) & 0xffff;
         }
     }
 
-    print_breakpoint(n, b) {
-        const active = b.active == "yes" ? "active" : "disabled";
-        self.term.write("Breakpoint #%s %s %s %04X".format(n, b.type, active, b.address));
-        if (b.count) this.term.write(" count:%d/%d".format(b.count, b.hits));
-        this.term.writeln("");
+    /**
+     * @typedef {Object} Breakpoint
+     * @property {string} type - "exec", "read" or "write"
+     * @property {string} active - "yes" or "no"
+     * @property {number} address
+     * @property {number} count
+     * @property {number} hits
+     * @property {string} [temporary] - "yes" or "no"
+     */
+
+    /**
+     * @param {number} n
+     * @param {Breakpoint} breakpoint
+     */
+    print_breakpoint(n, breakpoint) {
+        const active = breakpoint.active == "yes" ? "active" : "disabled";
+        const count = breakpoint.count ? " count:%d/%d".format(breakpoint.count, breakpoint.hits) : "";
+        this.put("breakpoint #%s %s %s %04X%s".format(n, breakpoint.type, active, breakpoint.address, count));
     }
 
-    process_breakpoint(i, b) {
-        this.print_breakpoint(i, b);
+    /**
+     * @param {number} i
+     * @param {Breakpoint} breakpoint
+     */
+    process_breakpoint(i, breakpoint) {
+        this.print_breakpoint(i, breakpoint);
         this.pause_cmd();
-        this.term.prompt();
-        window.focus();
         this.execute_after_breakpoint = true;
     }
 
@@ -331,7 +386,6 @@ export default class CLI {
         // condition to stop before the next instruction.
         if (this.stop_after_next_instruction == 1) {
             this.pause_cmd(this);
-            this.term.prompt();
             this.stop_after_next_instruction = -1;
             return;
         }
@@ -346,31 +400,36 @@ export default class CLI {
             return false;
         }
 
+        /**
+         * @param {Breakpoint} breakpoint
+         * @param {number} breakpoint_index
+         */
         const breakpoint_hit = (breakpoint, breakpoint_index) => {
-            if (!b.count) this.this.process_breakpoint(breakpoint_index, breakpoint);
+            if (!breakpoint.count) this.process_breakpoint(breakpoint_index, breakpoint);
             else {
-                ++b.hits;
-                if (b.hits == b.count) {
+                breakpoint.hits += 1;
+                if (breakpoint.hits == breakpoint.count) {
                     this.process_breakpoint(breakpoint_index, breakpoint);
-                    b.hits = 0;
+                    breakpoint.hits = 0;
                 }
             }
-            if (b.temporary == "yes") breaks[i] = null;
+            if (breakpoint.temporary == "yes") this.breaks[breakpoint_index] = null;
         };
 
-        for (let i in breaks) {
-            const b = breaks[i];
-            if (b == null || b.active != "yes") continue;
-            // Process "exec" breakpoints only before the current instruction.
-            if (when == "before" && b.address == cpu.pc && b.type == "exec") {
-                this.breakpoint_hit(b, i);
+        for (let i in Object.keys(this.breaks)) {
+            const breakpoint = this.breaks[i];
+            if (breakpoint == null || breakpoint.active != "yes") continue;
+            // process "exec" breakpoints only before the current instruction.
+            const { cpu } = this.machine;
+            if (when == "before" && breakpoint.address == cpu.pc && breakpoint.type == "exec") {
+                breakpoint_hit(breakpoint, i);
             }
-            // Process "read/write" breakpoints only after the current instruction.
+            // process "read/write" breakpoints only after the current instruction.
             if (when == "after") {
                 const address = cpu.memory.last_access_address;
                 const operation = cpu.memory.last_access_operation;
-                if (b.address == address && b.type == operation) {
-                    this.breakpoint_hit(b, i);
+                if (breakpoint.address == address && breakpoint.type == operation) {
+                    breakpoint_hit(breakpoint, i);
                 }
             }
         }
@@ -382,167 +441,165 @@ export default class CLI {
 
         if (state == "on" || state == "off") {
             if (state == "on") {
-                this.term.writeln("Tracing is on");
+                this.put("Tracing is on");
+                /** @param {string} when */
                 runner.tracer = (when) => {
                     const { cpu } = this.machine.runner;
-                    return tracer_callback(self, cpu, when);
+                    return this.tracer_callback(cpu, when);
                 };
             } else {
                 runner.tracer = null;
-                this.term.write("Tracing is off");
+                this.put("Tracing is off");
             }
         } else {
-            this.term.write("Trace is %s".format(runner.tracer ? "on" : "off"));
+            this.put("Trace is %s".format(runner.tracer ? "on" : "off"));
         }
     }
 
-    check_tracer_active(args) {
+    check_tracer_active() {
         if (this.machine.runner.tracer == null) {
-            this.term.writeln("Tracing is not active. Use 't' command to activate.");
+            this.put("Tracing is not active. Use 't' command to activate.");
             return false;
         }
         return true;
     }
 
+    /** @param {string[]} args */
     list_breakpoints_cmd(args) {
-        for (let i in breaks) {
-            const b = breaks[i];
+        for (let [i, b] of Object.entries(this.breaks)) {
             if (b == null) continue;
             this.print_breakpoint(i, b);
         }
     }
 
+    /** @param {string[]} args */
     edit_breakpoints_cmd(args) {
-        if (this.term.argc < 3) {
-            this.term.write("?");
-            return;
-        }
-        var n = parseInt(term.argv[1]);
-        if (isNaN(n)) {
-            this.term.write("?");
-            return;
-        }
-        if (breaks[n] == null) breaks[n] = { type: "?", active: "no", address: 0 };
-        var b = breaks[n];
+        if (args.length < 2)
+            return this.bad_command("be n type:exec|read|write address:0x1234 [count:N] [temporary:yes|no]");
 
-        for (var i = 2; i < this.term.argc; ++i) {
-            var args = this.term.argv[i].split(/[:=]/);
-            var arg = args.shift();
-            var value = args.shift();
-            if (["count", "address", "hits"].indexOf(arg) != -1) {
-                const num = parseInt(value);
-                if (isNaN(num)) {
-                    this.term.write("?");
-                    return;
-                }
-                b[arg] = num;
-                if (arg == "count") b.hits = 0;
-            } else b[arg] = value;
+        const n = parseInt(args[0]);
+        if (isNaN(n)) return this.bad_command("n - номер брейкпоинта для создания/редактирования");
+
+        if (this.breaks[n] == null) this.breaks[n] = { type: "?", active: "no", address: 0, count: 0, hits: 0 };
+        const breakpoint = this.breaks[n];
+
+        for (let i = 1; i < args.length; ++i) {
+            const split = args[i].split(/[:=]/);
+
+            const arg = /** @type {keyof Breakpoint} */ (split.shift());
+            const rawValue = split.shift();
+
+            if (!arg || !rawValue) return this.bad_command();
+
+            if (arg === "count" || arg === "address" || arg === "hits") {
+                const n = parseInt(rawValue, 10);
+                if (isNaN(n)) return this.bad_command();
+                breakpoint[arg] = n;
+                if (arg === "count") breakpoint.hits = 0;
+            } else {
+                breakpoint[arg] = /** @type {any} */ (rawValue);
+            }
         }
     }
 
+    /** @param {string} text */
+    bad_command(text = "?") {
+        this.put(text);
+    }
+
+    /** @param {string[]} args */
     delete_breakpoints_cmd(args) {
-        var term = term;
+        if (args.length < 2) return this.bad_command("bd n - удалить брейкпоинт #n");
 
-        if (term.argc < 2) {
-            this.term.write("?");
-            return;
-        }
-        var n = parseInt(term.argv[1]);
-        if (isNaN(n)) {
-            this.term.write("?");
-            return;
-        }
+        const n = parseInt(args[1]);
+        if (isNaN(n)) return this.bad_command("n - номер брейкпоинта для удаления");
 
-        breaks[n] = null;
+        this.breaks[n] = null;
     }
 
-    pause_cmd(args) {
-        runner.pause();
-        pause();
-        ui.update_pause_button(runner.paused);
+    pause_cmd() {
+        if (this.machine.runner.paused) return;
+        $("pause").click();
+        this.cpu_cmd();
+        this.put("остановлено на %04X".format(this.machine.cpu.pc));
     }
 
-    resume_cmd(args) {
-        runner.resume();
-        resume();
-        ui.update_pause_button(runner.paused);
-        window.opener.focus();
+    resume_cmd() {
+        if (!this.machine.runner.paused) return;
+        $("pause").click();
     }
 
-    reset_cmd(args) {
-        ui.reset();
-        window.opener.focus();
+    reset_cmd() {
+        $("reset").click();
     }
 
-    restart_cmd(args) {
-        ui.restart();
-        window.opener.focus();
+    restart_cmd() {
+        $("restart").click();
     }
 
+    /** @param {string[]} args */
     go_cmd(args) {
-        if (term.argc < 2) {
-            this.term.write("?");
+        if (args.length < 1) {
+            this.put("g addr - перейти по адресу");
             return;
         }
-        var addr = parseInt(term.argv[1]);
-        if (isNaN(addr)) {
-            this.term.write("?");
-            return;
-        }
-        runner.cpu.jump(addr);
+        const addr = parseInt(args[0]) & 0xffff;
+        if (isNaN(addr)) return this.bad_command();
+        this.machine.cpu.jump(addr);
     }
 
-    single_step_cmd(args) {
-        if (!check_tracer_active(self)) return;
-        stop_after_next_instruction = 0;
-        resume_cmd(self);
+    single_step_cmd() {
+        if (!this.check_tracer_active()) return;
+        this.stop_after_next_instruction = 0;
+        this.resume_cmd();
     }
 
-    step_over_cmd(args) {
-        var cpu = runner.cpu;
-        var mem = cpu.memory;
-        var binary = [];
-        for (var i = 0; i < 3; ++i) binary[binary.length] = mem.read_raw(cpu.pc + i);
-        var instr = i8080_disasm(binary);
-        var b = {
+    step_over_cmd() {
+        const { cpu, memory } = this.machine;
+        const binary = [];
+        for (let i = 0; i < 3; ++i) binary[binary.length] = memory.read_raw(cpu.pc + i);
+        const [opcode, arg1, arg2] = binary;
+        const instr = i8080_opcode(opcode, arg1, arg2);
+        /**
+         * @type {Breakpoint}
+         */
+        const breakpoint = {
             type: "exec",
             address: (cpu.pc + instr.length) & 0xffff,
             active: "yes",
             temporary: "yes",
+            count: 0,
+            hits: 0,
         };
-        breaks[1000] = b;
-        resume_cmd(self);
+        this.breaks[1000] = breakpoint;
+        this.resume_cmd();
     }
 
+    /** @param {string[]} args */
     check_sum_cmd(args) {
-        if (term.argc < 3) {
-            this.term.write("?");
-            return;
-        }
-        var from = parseInt(term.argv[1]);
-        if (isNaN(from)) {
-            this.term.write("?");
-            return;
-        }
-        var to = parseInt(term.argv[2]);
-        if (isNaN(to)) {
-            this.term.write("?");
-            return;
-        }
-        const image = runner.cpu.memory.snapshot(from, to + 1 - from);
+        if (args.length < 3) return this.bad_command("cs start end - вычислить контрольную сумму");
+
+        const from = parseInt(args[1]);
+        if (isNaN(from)) return this.bad_command("start - начальный адрес диапазона");
+
+        const to = parseInt(args[2]);
+        if (isNaN(to)) return this.bad_command("end - конечный адрес диапазона");
+
+        const image = this.machine.runner.cpu.memory.snapshot(from, to + 1 - from);
         const checksum = rk86_check_sum(image);
-        this.term.writeln("%04X-%04X: %04X".format(from, to, checksum));
+        this.put("%04X-%04X: %04X".format(from, to, checksum));
     }
 
-    history_cmd(args) {
+    history_cmd() {
+        const history = /** @type {ConsoleTerminal} */ ($("terminal_panel")).history || [];
         const limit = 10;
-        if (this.history.length === 0) return;
-        const from = Math.max(0, this.history.length - limit);
-        this.history.slice(from).forEach((cmd, index) => {
-            this.term.writeln("%d: %s".format(from + index + 1, cmd));
+        if (history.length === 0) return;
+        const from = Math.max(0, history.length - limit);
+        console.log(history);
+        history.slice(from).forEach((/** @type {string} */ cmd, /** @type {number} */ index) => {
+            this.put("%d: %s".format(from + index + 1, cmd));
         });
-        this.term.writeln("\nКлавиши вверх/вниз для навигации по истории команд.");
+        this.put("\nКлавиши вверх/вниз для навигации по истории команд.");
     }
 
     /** @param {string} str */
@@ -566,26 +623,7 @@ export default class CLI {
             const [handler, description] = this.commands[cmd.toLowerCase()];
             console.log(description, args);
             if (handler) handler.call(this, args);
-            else this.put("?");
+            else this.bad_command();
         }
-    }
-
-    pause() {
-        this.term.writeln("Paused at %04X".format(runner.cpu.pc));
-        this.cpu_cmd(this);
-    }
-
-    pause_ui_callback() {
-        this.pause();
-        this.term.prompt();
-    }
-
-    resume() {
-        this.term.write("Resumed");
-    }
-
-    resume_ui_callback() {
-        this.resume();
-        this.term.prompt();
     }
 }

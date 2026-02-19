@@ -17,14 +17,13 @@ import { rk86_snapshot, rk86_snapshot_restore } from "./rk86_snapshot.js";
 import { Tape } from "./rk86_tape.js";
 import { saveAs } from "./saver.js";
 import { tape_catalog } from "./tape_catalog.js";
-
 const elements = new Map();
 
 /**
  * @param {string} id
  * @returns {!HTMLElement}
  */
-const $ = (id) => {
+export const $ = (id) => {
     const cachedID = elements.get(id);
     if (cachedID) return cachedID;
 
@@ -39,16 +38,22 @@ const $ = (id) => {
 
 class IO {
     constructor() {
+        /** @param {number} port */
         this.input = (port) => 0;
+
+        /**
+         * @param {number} port
+         * @param {number} w8
+         **/
         this.output = (port, w8) => {};
+
+        /** @param {number} iff */
         this.interrupt = (iff) => {};
     }
 }
 
-/**
- * class
- */
 export class UI {
+    /** @param {import("./rk86_machine.js").Machine} machine */
     constructor(machine) {
         this.machine = machine;
 
@@ -112,6 +117,7 @@ export class UI {
         this.reset();
     }
 
+    /** @param {boolean} value */
     update_ruslat = (value) => {
         $("ruslat").textContent = value ? "РУС" : "ЛАТ";
     };
@@ -248,7 +254,7 @@ export class UI {
             const ruslat_flag = 0x7606;
             const state = this.machine.memory.read(ruslat_flag) ? 0x00 : 0xff;
             this.machine.memory.write(ruslat_flag, state);
-            this.update_ruslat(state);
+            this.update_ruslat(state ? true : false);
         });
 
         $("sound_toggle").addEventListener("click", () => {
@@ -298,7 +304,7 @@ export class UI {
                         $("upload_selector").click();
                         break;
                     case "KeyP":
-                        pause.click();
+                        $("pause").click();
                         break;
                     case "KeyG":
                         $("run").click();
@@ -501,20 +507,21 @@ export async function main() {
     const keyboard = new Keyboard();
     const io = new IO();
 
-    /** @type {{ font: string, keyboard: Keyboard, io: IO, ui: UI }} */
-    const machine = {
+    /** @type {import('./rk86_machine.js').MachineBuilder} */
+    const machineBuilder = {
         font: rk86_font_image(),
         keyboard,
         io,
     };
+    const machine = /** @type {import('./rk86_machine.js').Machine} */ (machineBuilder);
+
     machine.memory = new Memory(machine);
-
-    machine.ui = new UI(machine);
-    machine.screen = new Screen(machine);
     machine.cpu = new I8080(machine);
-    machine.runner = new Runner(machine);
-
+    machine.screen = new Screen(machine);
     machine.tape = new Tape(machine);
+
+    machine.runner = new Runner(machine);
+    machine.ui = new UI(machine);
 
     /**
      *
@@ -530,12 +537,13 @@ export async function main() {
             `загружен файл двоичный РК86`,
             `[${file.name}]`,
             `c адреса ${hex16(file.start)} до ${hex16(file.end)},`,
-            `запуск: G${hex16(file.entry)}`
+            `запуск: G${hex16(file.entry)}`,
         );
         return file;
     }
 
-    /** @typedef {Object.<number, string>} KeyCodes */
+    /** @typedef {Record<number, string>} KeyCodes */
+    /** @type {KeyCodes} */
     const KEY_CODES = {
         8: "Backspace",
         9: "Tab",
@@ -606,29 +614,39 @@ export async function main() {
     };
 
     /**
-     * @param {string|number} key - Either a string keyboard code (like "KeyA") or a numeric key code (like 65)
-     * @returns {string} - The keyboard event code (like "KeyA")
+     * @param {string|number} key - either a string keyboard code (like "KeyA") or a numeric key code (like 65)
+     * @returns {string} - the keyboard event code (like "KeyA")
      */
     function translate_key(key) {
         if (typeof key === "string") return key;
         return KEY_CODES[key];
     }
 
+    /** @typedef {import("./rk86_keyboard_injector.js").SequenceAction} SequenceAction */
+
     /**
-     * @param {Array<{keys: string[], duration: number, action: string}>} sequence
+     * @param {SequenceAction[]} sequence
      * @param {number} i
      */
-    function execute_commands_loop(sequence, i) {
-        const { keyboard } = machine;
+    function command_injector(sequence, i) {
         if (i >= sequence.length) return;
+        const { keyboard } = machineBuilder;
         const { keys, duration, action } = sequence[i];
         const call = action === "down" ? keyboard.onkeydown : keyboard.onkeyup;
-        if (action != "pause") keys.forEach((key) => call(translate_key(key)));
-        setTimeout(() => execute_commands_loop(sequence, i + 1), +duration);
+        if (action != "pause") {
+            if (Array.isArray(keys)) {
+                keys.forEach((key) => call(translate_key(key)));
+            } else {
+                call(translate_key(keys));
+            }
+        }
+        setTimeout(() => command_injector(sequence, i + 1), +duration);
     }
 
-    const execute_commands = (commands) => execute_commands_loop(commands, 0);
+    /** @param {SequenceAction[]} commands */
+    const execute_commands = (commands) => command_injector(commands, 0);
 
+    /** @param {SequenceAction[]} commands */
     function simulate_keyboard(commands) {
         const queue = convert_keyboard_sequence(commands);
         execute_commands(queue);
@@ -636,7 +654,7 @@ export async function main() {
 
     /**
      * @param {string} url
-     * @returns {string} - The base name of the URL (the last part after the last slash)
+     * @returns {string} - the part after the last slash
      */
     const basename = (url) => url.split("/").at(-1) || url;
 
@@ -689,8 +707,8 @@ export async function main() {
         selected_file = undefined;
 
         console.log(`размещаем файл [${name}] длиной ${binary.length} в память эмулятора`);
-        const json = FileParser.is_json(binary);
-        if (json) {
+        const { ok, json } = FileParser.parse(binary);
+        if (ok) {
             rk86_snapshot_restore(json, machine, simulate_keyboard);
             console.log(`образ [${name}] загружен, PC=${hex16(json.cpu.pc)}`);
             return;
@@ -702,7 +720,7 @@ export async function main() {
                 `` +
                     `загружен файл [${name}] ` +
                     `c адреса ${hex16(file.start, "0x")} по ${hex16(file.end, "0x")}, ` +
-                    `запуск: G${file.entry.toString(16)}`
+                    `запуск: G${file.entry.toString(16)}`,
             );
             selected_file = file;
         } catch (e) {
@@ -715,9 +733,9 @@ export async function main() {
         alert("Ошибка загрузки монитора mon32.bin");
         return;
     }
-    machine.memory.load_file(monitor);
+    machineBuilder.memory.load_file(monitor);
 
-    machine.screen.start();
+    machineBuilder.screen.start();
 
     const url = window.location.href;
 
@@ -730,16 +748,16 @@ export async function main() {
         await loadAutoexecFile(autoexec_file);
     }
 
-    machine.runner.execute();
+    machineBuilder.runner.execute();
 
     function reset() {
-        machine.keyboard.reset();
-        machine.cpu.jump(0xf800);
+        machineBuilder.keyboard.reset();
+        machineBuilder.cpu.jump(0xf800);
     }
 
     $("reset").addEventListener("click", () => reset());
     $("restart").addEventListener("click", () => {
-        machine.memory.zero_ram();
+        machineBuilder.memory.zero_ram();
         reset();
     });
 
@@ -760,7 +778,7 @@ export async function main() {
         });
     });
 
-    machine.memory.update_ruslat = machine.ui.update_ruslat;
+    machineBuilder.memory.update_ruslat = machineBuilder.ui.update_ruslat;
 
     for (const name of tape_catalog()) {
         const option = document.createElement("option");
@@ -875,29 +893,29 @@ export async function main() {
 
     $("run").addEventListener("click", async () => {
         if (selected_file) {
-            machine.cpu.jump(selected_file.entry);
+            machineBuilder.cpu.jump(selected_file.entry);
             return;
         }
         await load_catalog_file_from_selector();
         if (!selected_file) return;
-        machine.cpu.jump(selected_file.entry);
+        machineBuilder.cpu.jump(selected_file.entry);
     });
 
-    machine.ui.i8080disasm = new I8080DisasmPanel(machine.memory);
-    window.i8080disasm = machine.ui.i8080disasm;
+    machineBuilder.ui.i8080disasm = new I8080DisasmPanel(machineBuilder.memory);
+    window.i8080disasm = machineBuilder.ui.i8080disasm;
 
-    machine.cli = new CLI(machine);
+    machineBuilder.cli = new CLI(machineBuilder);
 
-    machine.ui.terminal = $("terminal_panel");
+    machineBuilder.ui.terminal = $("terminal_panel");
     $("terminal_panel").run = (cmd) => {
         console.log(`команда: ${cmd}`);
-        machine.cli.run(cmd);
+        machineBuilder.cli.run(cmd);
     };
     $("terminal_panel").put("консоль подключена");
 
-    machine.ui.start_update_perf();
+    machineBuilder.ui.start_update_perf();
 
-    window.machine = machine;
+    window.machine = machineBuilder;
 
     // visualizer
     {
@@ -906,7 +924,7 @@ export async function main() {
 
         $("visualizer_panel").innerHTML = loaded.getElementById("visualizer_panel").innerHTML;
 
-        machine.ui.visualizer = new Visualizer();
+        machineBuilder.ui.visualizer = new Visualizer();
     }
 
     // keyboard visualizer

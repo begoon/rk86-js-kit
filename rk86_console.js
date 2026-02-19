@@ -461,7 +461,7 @@ export class Console {
     }
 
     pause_cmd(args) {
-        runner.pause();
+        if (this.machine.runner.paused) return;
         pause();
         ui.update_pause_button(runner.paused);
     }

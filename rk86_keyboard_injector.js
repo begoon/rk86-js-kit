@@ -2,7 +2,7 @@
  * @typedef {Object} SequenceAction
  * @property {number|number[]} keys
  * @property {number} duration
- * @property {"press"|"down"|"up"} action
+ * @property {"press"|"down"|"up"|"pause"} action
  */
 
 /**

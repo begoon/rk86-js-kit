@@ -1,43 +1,46 @@
-// Part of Radio-86RK in JavaScript based on I8080/JS
-//
-// Copyright (C) 2012 Alexander Demin <alexander@demin.ws>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2, or (at your option)
-// any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
 import { Sound } from "./rk86_sound.js";
 
-export function Runner(machine) {
-    this.machine = machine;
+/**
+ * @param {import("./rk86_machine.js").Machine} machine
+ * @constructor
+ */
+export class Runner {
+    /**
+     * @param {import("./rk86_machine.js").Machine} machine
+     */
+    constructor(machine) {
+        this.machine = machine;
 
-    this.paused = false;
-    this.tracer = null;
+        this.paused = false;
 
-    this.last_instructions = [];
+        /** @type {(function(string): void) | null} */
+        this.tracer = null;
 
-    this.previous_batch_time = 0;
+        /** @type {number[]} */
+        this.last_instructions = [];
 
-    this.total_ticks = 0;
+        this.previous_batch_time = 0;
 
-    this.last_iff_raise_ticks = 0;
-    this.last_iff = 0;
-    this.sound = false;
+        this.total_ticks = 0;
 
-    const FREQ = 1780000;
-    const TICK_PER_MS = FREQ / 100;
+        this.last_iff_raise_ticks = 0;
+        this.last_iff = 0;
 
-    this.interrupt = (iff) => {
+        /** @type {Sound|null} */
+        this.sound = null;
+
+        this.instructions_per_millisecond = 0;
+        this.ticks_per_millisecond = 0;
+
+        this.FREQ = 1780000;
+        this.TICK_PER_MS = this.FREQ / 100;
+
+        this.machine.io.interrupt = this.interrupt;
+        this.machine.cpu.jump(0xf800);
+    }
+
+    /** @param {number} iff */
+    interrupt(iff) {
         if (!this.sound) return;
         if (this.last_iff == iff) return;
         if (this.last_iff == 0 && iff == 1) {
@@ -45,29 +48,29 @@ export function Runner(machine) {
         }
         if (this.last_iff == 1 && iff == 0) {
             const tone_ticks = this.total_ticks - this.last_iff_raise_ticks;
-            const tone = FREQ / (tone_ticks * 2);
+            const tone = this.FREQ / (tone_ticks * 2);
             const duration = 1 / tone;
-            this.sound.play(tone, duration);
+            this.sound?.play(tone, duration);
         }
         this.last_iff = iff;
-    };
+    }
 
-    this.init_sound = (enabled) => (this.sound = enabled ? new Sound() : false);
+    /** @param {boolean} enabled */
+    init_sound(enabled) {
+        enabled && this.sound == null ? new Sound() : null;
+    }
 
-    this.machine.io.interrupt = this.interrupt;
-    this.machine.cpu.jump(0xf800);
-
-    this.execute = function () {
+    execute() {
         clearTimeout(this.execute_timer);
         if (!this.paused) {
             let batch_ticks = 0;
             let batch_instructions = 0;
-            while (batch_ticks < TICK_PER_MS) {
+            while (batch_ticks < this.TICK_PER_MS) {
                 if (this.tracer) {
                     this.tracer("before");
                     if (this.paused) break;
                 }
-                this.last_instructions.push(machine.cpu.pc);
+                this.last_instructions.push(this.machine.cpu.pc);
                 if (this.last_instructions.length > 5) {
                     this.last_instructions.shift();
                 }
@@ -93,13 +96,13 @@ export function Runner(machine) {
             this.ticks_per_millisecond = batch_ticks / elapsed;
         }
         this.execute_timer = setTimeout(() => this.execute(), 10);
-    };
+    }
 
-    this.pause = function () {
+    pause() {
         this.paused = true;
-    };
+    }
 
-    this.resume = function () {
+    resume() {
         this.paused = false;
-    };
+    }
 }
