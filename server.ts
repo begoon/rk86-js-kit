@@ -1,6 +1,8 @@
+import page from "./index.html" with { type: "text" };
+
 const server = Bun.serve({
     routes: {
-        "/": new Response(Bun.file("./index.html")),
+        "/": new Response(page, { headers: { "Content-Type": "text/html" } }),
         "/.well-known/appspecific/com.chrome.devtools.json": new Response("OK"),
         "/console": async (req) => {
             const data = await req.json();

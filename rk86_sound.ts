@@ -1,0 +1,30 @@
+import { SoundPlayer } from "./SoundPlayer.ts";
+
+export class Sound {
+    volume = 0.05;
+    stop_timer: ReturnType<typeof setTimeout> | null = null;
+    previous_tone: number | null = null;
+    player: SoundPlayer;
+
+    constructor() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.player = new SoundPlayer(new AudioContext());
+    }
+
+    set_stop_timer(duration: number) {
+        return setTimeout(() => {
+            this.player.stop();
+            this.previous_tone = null;
+        }, duration * 1000);
+    }
+
+    play(tone: number, duration: number) {
+        clearTimeout(this.stop_timer);
+        if (this.previous_tone !== tone) {
+            if (this.previous_tone) this.player.stop();
+            this.player.play(tone, this.volume, "square");
+        }
+        this.previous_tone = tone;
+        this.stop_timer = this.set_stop_timer(duration);
+    }
+}

@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "checkJs": true,
     "allowJs": true,
     "typeRoots": [
       "./node_modules/@types"
@@ -18,8 +17,8 @@
     ]
   },
   "include": [
-    "./**/*.js",
+    "./**/*.ts",
     "./types/**/*.d.ts",
-    "./*.d.ts",
+    "./*.d.ts"
   ]
 }

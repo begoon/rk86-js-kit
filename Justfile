@@ -1,7 +1,12 @@
-test: lint test-js test-i8080
+default: test-js build
+
+test: test-js test-i8080
+
+build:
+    bun build --compile --target=browser --outfile=index.html main.html
 
 lint:
-    bunx eslint *.js
+    bunx eslint *.ts
 
 run:
     bun run --watch main.ts
@@ -13,12 +18,12 @@ test-js:
     bun test
 
 test-i8080:
-    node i8080_ex.js
+    bun i8080_ex.ts
 
 test-ex1-bun:
-    bun i8080_ex.js --ex1 --verbose
+    bun i8080_ex.ts --ex1 --verbose
 
 test-ex1-node:
-    node i8080_ex.js --ex1 --verbose
+    node i8080_ex.ts --ex1 --verbose
 
 test-ci: test-js test-ex1-bun test-ex1-node
