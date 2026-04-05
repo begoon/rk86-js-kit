@@ -4,7 +4,7 @@ import { Screen } from "../rk86_screen.ts";
 
 globalThis.Image = function () {} as any;
 
-let screen: Screen | undefined = undefined;
+let screen: Screen;
 
 beforeEach(() => {
     screen = new Screen({});
@@ -23,8 +23,6 @@ beforeEach(() => {
 });
 
 test("screen export", () => {
-    if (!screen) throw new Error("screen is not defined");
-
     const exported = screen.export();
 
     expect(exported.scale_x).toBe(1);
@@ -42,8 +40,6 @@ test("screen export", () => {
 });
 
 test("screen import", () => {
-    if (!screen) throw new Error("screen is not defined");
-
     const imported = new Screen({});
     imported.import(screen.export());
 

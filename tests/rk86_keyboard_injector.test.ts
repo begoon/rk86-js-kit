@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
 
-import { convert_keyboard_sequence } from "../rk86_keyboard_injector.ts";
+import { type SequenceAction, convert_keyboard_sequence } from "../rk86_keyboard_injector.ts";
 
-const seq = [
+const sequence: SequenceAction[] = [
     { keys: [68, 188, 70, 70, 70], duration: 100, action: "press" },
     { keys: [13], duration: 100, action: "press" },
     { keys: 0, duration: 300, action: "pause" },
@@ -11,7 +11,7 @@ const seq = [
 ];
 
 test("convert_keyboard_sequence", () => {
-    const expected = [
+    const expected: SequenceAction[] = [
         { keys: [68], duration: 100, action: "down" },
         { keys: [68], duration: 100, action: "up" },
         { keys: [188], duration: 100, action: "down" },
@@ -28,5 +28,5 @@ test("convert_keyboard_sequence", () => {
         { keys: [17, 67], duration: 100, action: "down" },
         { keys: [67, 17], duration: 100, action: "up" },
     ];
-    expect(convert_keyboard_sequence(seq)).toEqual(expected);
+    expect(convert_keyboard_sequence(sequence)).toEqual(expected);
 });

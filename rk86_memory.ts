@@ -3,25 +3,25 @@ import * as hexMap from "./hex_map.ts";
 import type { RK86File } from "./rk86_file_parser.ts";
 
 interface MemorySnapshot {
-    vg75_c001_00_cmd: string;
-    video_screen_size_x_buf: string;
-    video_screen_size_y_buf: string;
-    vg75_c001_80_cmd: string;
-    cursor_x_buf: string;
-    cursor_y_buf: string;
-    vg75_c001_60_cmd: string;
-    ik57_e008_80_cmd: string;
-    tape_8002_as_output: string;
+    vg75_c001_00_cmd: number;
+    video_screen_size_x_buf: number;
+    video_screen_size_y_buf: number;
+    vg75_c001_80_cmd: number;
+    cursor_x_buf: number;
+    cursor_y_buf: number;
+    vg75_c001_60_cmd: number;
+    ik57_e008_80_cmd: number;
+    tape_8002_as_output: number;
     video_memory_base_buf: string;
     video_memory_size_buf: string;
     video_memory_base: string;
     video_memory_size: string;
-    video_screen_size_x: string;
-    video_screen_size_y: string;
-    video_screen_cursor_x: string;
-    video_screen_cursor_y: string;
+    video_screen_size_x: number;
+    video_screen_size_y: number;
+    video_screen_cursor_x: number;
+    video_screen_cursor_y: number;
     last_access_address: string;
-    last_access_operation: string;
+    last_access_operation: string | undefined;
     memory: Record<string, string>;
 }
 
@@ -115,23 +115,23 @@ export class Memory {
 
     import = (snapshot: MemorySnapshot) => {
         const h = fromHex;
-        this.vg75_c001_00_cmd = h(snapshot.vg75_c001_00_cmd);
-        this.video_screen_size_x_buf = h(snapshot.video_screen_size_x_buf);
-        this.video_screen_size_y_buf = h(snapshot.video_screen_size_y_buf);
-        this.vg75_c001_80_cmd = h(snapshot.vg75_c001_80_cmd);
-        this.cursor_x_buf = h(snapshot.cursor_x_buf);
-        this.cursor_y_buf = h(snapshot.cursor_y_buf);
-        this.vg75_c001_60_cmd = h(snapshot.vg75_c001_60_cmd);
-        this.ik57_e008_80_cmd = h(snapshot.ik57_e008_80_cmd);
-        this.tape_8002_as_output = h(snapshot.tape_8002_as_output);
+        this.vg75_c001_00_cmd = snapshot.vg75_c001_00_cmd;
+        this.video_screen_size_x_buf = snapshot.video_screen_size_x_buf;
+        this.video_screen_size_y_buf = snapshot.video_screen_size_y_buf;
+        this.vg75_c001_80_cmd = snapshot.vg75_c001_80_cmd;
+        this.cursor_x_buf = snapshot.cursor_x_buf;
+        this.cursor_y_buf = snapshot.cursor_y_buf;
+        this.vg75_c001_60_cmd = snapshot.vg75_c001_60_cmd;
+        this.ik57_e008_80_cmd = snapshot.ik57_e008_80_cmd;
+        this.tape_8002_as_output = snapshot.tape_8002_as_output;
         this.video_memory_base_buf = h(snapshot.video_memory_base_buf);
         this.video_memory_size_buf = h(snapshot.video_memory_size_buf);
         this.video_memory_base = h(snapshot.video_memory_base);
         this.video_memory_size = h(snapshot.video_memory_size);
-        this.video_screen_size_x = h(snapshot.video_screen_size_x);
-        this.video_screen_size_y = h(snapshot.video_screen_size_y);
-        this.video_screen_cursor_x = h(snapshot.video_screen_cursor_x);
-        this.video_screen_cursor_y = h(snapshot.video_screen_cursor_y);
+        this.video_screen_size_x = snapshot.video_screen_size_x;
+        this.video_screen_size_y = snapshot.video_screen_size_y;
+        this.video_screen_cursor_x = snapshot.video_screen_cursor_x;
+        this.video_screen_cursor_y = snapshot.video_screen_cursor_y;
         this.last_access_address = h(snapshot.last_access_address);
         this.last_access_operation = snapshot.last_access_operation;
         this.buf = hexMap.parse(snapshot.memory);

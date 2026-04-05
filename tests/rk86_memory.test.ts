@@ -3,7 +3,7 @@ import { beforeEach, expect, test } from "bun:test";
 import { hex16, hexArray } from "../hex.ts";
 import { Memory } from "../rk86_memory.ts";
 
-let memory = undefined;
+let memory!: Memory;
 
 beforeEach(() => {
     memory = new Memory(undefined);

@@ -4,7 +4,7 @@ import I8080DisasmPanel from "../i8080disasm_panel.ts";
 import { Memory } from "../rk86_memory.ts";
 
 let memory;
-let disasm;
+let disasm: I8080DisasmPanel;
 
 beforeEach(() => {
     memory = new Memory(undefined);
@@ -45,7 +45,7 @@ test("code", () => {
             `<br />` +
             `0002: FF^^^^ .^^ ` +
             `<span style='color: white;'>RST</span>^^ <span>7</span>`
-        ).replaceAll("^", "&nbsp;")
+        ).replaceAll("^", "&nbsp;"),
     );
 });
 
@@ -54,6 +54,6 @@ test("dump", () => {
         "" +
             "FFFE: CD AA BB 00 FF 00 00 00 ........<br />" +
             "0006: 00 00 00 00 00 00 00 00 ........<br />" +
-            "000E: 00 00 00 00 00 00 00 00 ........"
+            "000E: 00 00 00 00 00 00 00 00 ........",
     );
 });

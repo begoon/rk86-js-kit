@@ -24,13 +24,14 @@ export function rk86_snapshot(machine: Machine, version: string): string {
 }
 
 export function rk86_snapshot_restore(
-    snapshot: any,
-    machine: Machine,
+    snapshot: string | Record<string, any>,
+    machine?: Machine | undefined,
     keys_injector?: (commands: any[]) => void,
 ): boolean {
     try {
         const json = typeof snapshot === "string" ? JSON.parse(snapshot) : snapshot;
         if (json.id != "rk86") return false;
+        if (!machine) return false;
 
         const { screen, cpu, memory, keyboard } = machine;
 

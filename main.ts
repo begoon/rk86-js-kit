@@ -44,8 +44,8 @@ class IO {
 export class UI {
     machine: Machine;
     canvas: HTMLCanvasElement;
-    ips: HTMLElement;
-    tps: HTMLElement;
+    ips!: HTMLElement;
+    tps!: HTMLElement;
     meta_press_count = 0;
     command_mode = false;
     screenshot_name = "rk86-screen";

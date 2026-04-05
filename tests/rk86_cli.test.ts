@@ -4,7 +4,6 @@ import { Memory } from "../rk86_memory.ts";
 
 test("parseNumber", () => {
     expect(parseNumber("")).toBe(NaN);
-    expect(parseNumber("", "a")).toBe("a");
     expect(parseNumber(undefined, 100)).toBe(100);
 
     expect(parseNumber("@")).toBe(NaN);

@@ -1,8 +1,6 @@
-import page from "./index.html" with { type: "text" };
-
 const server = Bun.serve({
     routes: {
-        "/": new Response(page, { headers: { "Content-Type": "text/html" } }),
+        "/": () => new Response(Bun.file("main.html")),
         "/.well-known/appspecific/com.chrome.devtools.json": new Response("OK"),
         "/console": async (req) => {
             const data = await req.json();
@@ -13,10 +11,23 @@ const server = Bun.serve({
             }
             return new Response(undefined);
         },
-        "/*": (req) => {
+        "/*": async (req) => {
             const url = new URL(req.url);
-            const path = url.pathname;
-            return new Response(Bun.file(`.${path}`));
+            const path = `.${url.pathname}`;
+            if (path.endsWith(".ts")) {
+                const result = await Bun.build({
+                    entrypoints: [path],
+                    target: "browser",
+                });
+                if (result.success && result.outputs.length > 0) {
+                    return new Response(result.outputs[0], {
+                        headers: { "Content-Type": "application/javascript" },
+                    });
+                }
+                console.error("Build failed:", result.logs);
+                return new Response("Build failed", { status: 500 });
+            }
+            return new Response(Bun.file(path));
         },
     },
 

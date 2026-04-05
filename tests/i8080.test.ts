@@ -20,7 +20,16 @@ beforeEach(() => {
     memory.write_raw(0xffff, 0xfe); // CPI data8
     memory.write_raw(0x0000, 0xaa);
 
-    cpu = new I8080({ memory, io: undefined });
+    const io = {
+        input: (port: number): number => {
+            throw new Error(`unexpected IO read from port ${hex8(port)}`);
+        },
+        output: (port: number, value: number): void => {
+            throw new Error(`unexpected IO write to port ${hex8(port)} with value ${hex8(value)}`);
+        },
+        interrupt: (_iff: number): void => {},
+    };
+    cpu = new I8080({ memory, io });
 });
 
 test("init", () => {

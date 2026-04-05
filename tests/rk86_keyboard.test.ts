@@ -2,7 +2,7 @@ import { beforeEach, expect, test } from "bun:test";
 
 import { Keyboard } from "../rk86_keyboard.ts";
 
-let keyboard = undefined;
+let keyboard!: Keyboard;
 
 beforeEach(() => {
     keyboard = new Keyboard();
@@ -18,7 +18,7 @@ test("keyboard export", () => {
 
 test("keyboard import", () => {
     const imported = new Keyboard();
-    imported.import(keyboard.export());
+    imported.import(keyboard!.export());
     expect(imported.state).toEqual(keyboard.state);
     expect(imported.modifiers).toBe(keyboard.modifiers);
 });

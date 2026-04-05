@@ -12,7 +12,7 @@ export interface I8080Instruction {
     instr?: string;
 }
 
-export function i8080_opcode(opcode: number, byte2: number, byte3: number): I8080Instruction {
+export function i8080_opcode(opcode: number, byte2: number = 0, byte3: number = 0): I8080Instruction {
     const imm8_ = byte2 & 0xff;
     const imm16_ = imm8_ | ((byte3 & 0xff) << 8);
 

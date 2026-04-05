@@ -20,8 +20,10 @@ interface ParseResult {
     json?: any;
 }
 
-export const parse = (binary: number[]): ParseResult => {
+export const parse = (binary?: number[] | Uint8Array | null): ParseResult => {
     try {
+        if (!binary) return { ok: false };
+        if (binary instanceof Uint8Array) binary = Array.from(binary);
         const text = to_text(binary);
         return { ok: true, json: JSON.parse(text) };
     } catch {

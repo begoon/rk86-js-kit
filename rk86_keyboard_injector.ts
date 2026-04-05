@@ -4,9 +4,9 @@ export interface SequenceAction {
     action: "press" | "down" | "up" | "pause";
 }
 
-export function convert_keyboard_sequence(seq: SequenceAction[]): SequenceAction[] {
+export function convert_keyboard_sequence(sequence: SequenceAction[]): SequenceAction[] {
     const queue: SequenceAction[] = [];
-    seq.forEach(({ keys: keys_, duration, action }) => {
+    sequence.forEach(({ keys: keys_, duration, action }) => {
         const keys = typeof keys_ === "number" ? [keys_] : keys_;
         if (action === "press") {
             keys.forEach((key) => {

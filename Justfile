@@ -8,7 +8,7 @@ build:
 lint:
     bunx eslint *.ts
 
-run: build
+run:
     bun run --watch server.ts
 
 test-watch:

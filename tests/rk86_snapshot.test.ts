@@ -14,12 +14,33 @@ globalThis.Image = function () {} as any;
 
 const version = "0.0.0";
 
-const snapshot_standard = __dirname + "/snapshot.json";
+const snapshot_standard = new URL("snapshot.json", import.meta.url).pathname;
 
-let machine: Machine | undefined = undefined;
+let machine: Machine;
+
+const memory = {
+    read: (addr: number): number => {
+        throw new Error(`unexpected memory read from address ${addr}`);
+    },
+    write: (addr: number, value: number): void => {
+        throw new Error(`unexpected memory write to address ${addr} with value ${value}`);
+    },
+};
+
+const io = {
+    input: (port: number): number => {
+        throw new Error(`unexpected IO read from port ${port}`);
+    },
+    output: (port: number, value: number): void => {
+        throw new Error(`unexpected IO write to port ${port} with value ${value}`);
+    },
+    interrupt: (iff: number): void => {
+        throw new Error(`unexpected interrupt with IFF ${iff}`);
+    },
+};
 
 function create_cpu() {
-    const cpu = new I8080({});
+    const cpu = new I8080({ memory, io });
     cpu.set_a(0xe6);
     cpu.sf = 1;
     cpu.zf = 0;
@@ -39,7 +60,7 @@ function create_cpu() {
 }
 
 function create_keyboard() {
-    const keyboard = new Keyboard({});
+    const keyboard = new Keyboard();
     keyboard.modifiers = 0xe6;
     keyboard.state = [0x0f, 0x1e, 0x2d, 0x3c, 0x4b, 0x5a, 0x69, 0x78];
     return keyboard;
@@ -77,7 +98,7 @@ function create_screen() {
     screen.scale_y = 2;
     screen.width = 3;
     screen.height = 4;
-    screen.cursor_state = 1;
+    screen.cursor_state = true;
     screen.cursor_x = 6;
     screen.cursor_y = 7;
     screen.video_memory_base = 0x1111;
@@ -90,21 +111,20 @@ function create_screen() {
 
 beforeEach(() => {
     machine = {
-        io: {},
+        io,
         cpu: create_cpu(),
         memory: create_memory(),
         keyboard: create_keyboard(),
         screen: create_screen(),
         ui: {},
-    };
-    if (!machine) throw new Error("machine is not defined");
+    } as unknown as Machine;
     machine.screen.machine = machine;
 });
 
 const normalize = (v: string) => JSON.stringify(JSON.parse(v), null, 4);
 
 import { Machine } from "../rk86_machine.ts";
-import EXPECTED_SNAPSHOT from "./test_snapshot.json" assert { type: "json" };
+import EXPECTED_SNAPSHOT from "./test_snapshot.json" with { type: "json" };
 
 test("export", () => {
     expect.assertions(4172);
@@ -148,7 +168,7 @@ test.each([
     machine.ui.update_screen_geometry = (width, height) => expect([width, height]).toEqual([3, 4]);
     machine.ui.resize_canvas = (width, height) => expect([width, height]).toEqual([18, 80]);
 
-    machine.screen.ctx = {};
+    machine.screen.ctx = {} as unknown as CanvasRenderingContext2D;
     machine.screen.ctx.fillRect = (x, y, width, height) => expect([x, y, width, height]).toEqual([0, 0, 18, 80]);
     machine.screen.set_video_memory = (base) => expect(base).toBe(0x1111);
 

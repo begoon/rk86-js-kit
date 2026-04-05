@@ -2,10 +2,31 @@ import { beforeEach, expect, test } from "bun:test";
 
 import { I8080 } from "../i8080.ts";
 
-let cpu = undefined;
+let cpu: I8080;
+
+const memory = {
+    read: (addr: number): number => {
+        throw new Error(`unexpected memory read from address ${addr}`);
+    },
+    write: (addr: number, value: number): void => {
+        throw new Error(`unexpected memory write to address ${addr} with value ${value}`);
+    },
+};
+
+const io = {
+    input: (port: number): number => {
+        throw new Error(`unexpected IO read from port ${port}`);
+    },
+    output: (port: number, value: number): void => {
+        throw new Error(`unexpected IO write to port ${port} with value ${value}`);
+    },
+    interrupt: (iff: number): void => {
+        throw new Error(`unexpected interrupt with IFF ${iff}`);
+    },
+};
 
 beforeEach(() => {
-    cpu = new I8080({});
+    cpu = new I8080({ memory, io });
     cpu.set_a(0xe6);
     cpu.sf = 1;
     cpu.zf = 0;
@@ -40,7 +61,7 @@ test("cpu export", () => {
 });
 
 test("cpu import", () => {
-    const imported = new I8080({});
+    const imported = new I8080({ memory, io });
     imported.import(cpu.export());
     expect(imported.a()).toBe(cpu.a());
     expect(imported.sf).toBe(cpu.sf);

@@ -39,7 +39,7 @@ describe.each([
 ])(`file`, async ({ name, timeout, expected }) => {
     test(`${name} | ${timeout}s`, async () => {
         const { success, output } = await executor(name, false, timeout);
-        expect(output).toEqual(expected);
+        expect(output).toEqual([...expected]);
         expect(success).toBeTrue();
     });
 });
