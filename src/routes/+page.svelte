@@ -307,7 +307,7 @@
         <Visualizer onclose={toggleVisualizer} />
     {/if}
     {#if disassemblerVisible && machine}
-        <Disassembler memory={machine.memory} pc={() => machine.cpu.pc} onclose={toggleDisassembler} />
+        <Disassembler memory={machine.memory} pc={() => machine!.cpu.pc} onclose={toggleDisassembler} />
     {/if}
     {#if terminalVisible}
         <Terminal bind:this={terminal} onrun={(cmd) => cli?.run(cmd)} onclose={toggleTerminal} />

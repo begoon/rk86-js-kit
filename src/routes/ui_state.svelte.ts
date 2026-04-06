@@ -1,7 +1,10 @@
 // Reactive bridge between imperative engine code and Svelte components.
 // Engine writes here via callbacks, Svelte reads reactively.
 
+import type { RK86File } from "$lib/rk86_file_parser";
+
 export const ui = $state({
+    selectedFile: undefined as RK86File | undefined,
     tapeActivityActive: false,
     tapeWrittenBytes: 0,
     tapeHighlight: false,

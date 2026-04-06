@@ -1,4 +1,4 @@
-import type { UI } from "../../main.js";
+import type { UI } from "../routes/main.js";
 import type { IO } from "../../test_machine.js";
 import type { I8080 } from "./i8080.ts";
 import type { Keyboard } from "./rk86_keyboard.ts";

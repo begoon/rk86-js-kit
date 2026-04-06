@@ -304,7 +304,7 @@ export class Memory {
             this.ik57_e008_80_cmd = 0;
             this.video_memory_base = this.video_memory_base_buf;
             this.video_memory_size = this.video_memory_size_buf;
-            this.machine.screen.set_video_memory(this.video_memory_base, this.video_memory_size);
+            this.machine.screen.set_video_memory(this.video_memory_base);
             return;
         }
 
