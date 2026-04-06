@@ -4,14 +4,14 @@
     let shortcutsDialog = $state<HTMLDialogElement>();
     let hintText = $state("");
 
-    import { main } from "./main";
-    import { ui } from "./ui_state.svelte";
-    import Keyboard from "./Keyboard.svelte";
-    import CatalogSelector from "./CatalogSelector.svelte";
-    import Visualizer from "./Visualizer.svelte";
-    import Disassembler from "./Disassembler.svelte";
-    import Terminal from "./Terminal.svelte";
     import CLI from "$lib/rk86_cli";
+    import CatalogSelector from "./CatalogSelector.svelte";
+    import Disassembler from "./Disassembler.svelte";
+    import Keyboard from "./Keyboard.svelte";
+    import { main as boot } from "./main";
+    import Terminal from "./Terminal.svelte";
+    import { ui } from "./ui_state.svelte";
+    import Visualizer from "./Visualizer.svelte";
 
     let keyboardVisible = $state(false);
     let catalogDialog = $state<HTMLDialogElement>();
@@ -22,22 +22,30 @@
     let machine = $state<Machine>();
 
     $effect(() => {
-        setTimeout(async () => {
-            if (!canvas) {
-                console.error("canvas element not found");
+        if (!canvas) return;
+        boot(canvas).then((m) => {
+            if (!m) {
+                console.error("ошибка при инициализации эмулятора");
                 return;
             }
-            machine = await main(canvas)!;
-            machine.ui.toggle_assembler = toggleAssembler;
-            machine.ui.on_visualizer_hit = (opcode: number) => { ui.visualizerOpcode = opcode; };
-            machine.ui.on_pause_changed = (value: boolean) => { paused = value; };
-            machine.ui.terminal = {
-                put: (str: string) => terminalRef?.put(str),
-                get history() { return terminalRef?.getHistory() ?? []; },
+            m.ui.toggle_assembler = toggleAssembler;
+            m.ui.on_visualizer_hit = (opcode: number) => {
+                ui.visualizerOpcode = opcode;
             };
+            m.ui.on_pause_changed = (value: boolean) => {
+                paused = value;
+            };
+            m.ui.terminal = {
+                put: (str: string) => terminal?.put(str),
+                get history() {
+                    if (!terminal) return [];
+                    return terminal.currentHistory();
+                },
+            };
+            machine = m;
             cli = new CLI(machine);
             window.machine = machine;
-        }, 0);
+        });
     });
 
     function toggleFullscreen() {
@@ -68,11 +76,12 @@
 
     function toggleTerminal() {
         terminalVisible = !terminalVisible;
-        if (terminalVisible) setTimeout(() => terminalRef?.focus(), 0);
+        if (terminalVisible) setTimeout(() => terminal?.focus(), 0);
     }
 
     const shortcuts: Record<string, () => void> = {
         f: toggleFullscreen,
+        c: () => machine?.reset(),
         r: () => machine?.restart(),
         p: togglePaused,
         s: toggleSound,
@@ -117,11 +126,14 @@
 
     let paused = $state(false);
     let fullscreen = $state(false);
+
     let assemblerVisible = $state(false);
     let visualizerVisible = $state(false);
     let disassemblerVisible = $state(false);
     let terminalVisible = $state(false);
-    let terminalRef = $state<Terminal>();
+
+    let terminal = $state<Terminal>();
+
     let cli: CLI;
 
     let soundEnabled = $state(false);
@@ -168,7 +180,13 @@
         <button class="icon" data-text="Полноэкранный режим" onclick={toggleFullscreen}>
             <img class="icon" src="i/fullscreen.svg" alt="Полноэкранный режим" />
         </button>
-        <button type="button" class="icon" class:active={keyboardVisible} data-text="Клавиатура" onclick={() => (keyboardVisible = !keyboardVisible)}>
+        <button
+            type="button"
+            class="icon"
+            class:active={keyboardVisible}
+            data-text="Клавиатура"
+            onclick={() => (keyboardVisible = !keyboardVisible)}
+        >
             <img class="icon" src="i/keyboard.svg" alt="Клавиатура" />
         </button>
         <button type="button" class="icon" data-text="Помощь" onclick={() => window.open("help.html", "_blank")}>
@@ -185,7 +203,12 @@
                     {/if}
                 {/if}
             </button>
-            <button type="button" class="icon" data-text="Выбрать файл из каталога" onclick={() => catalogDialog?.showModal()}>
+            <button
+                type="button"
+                class="icon"
+                data-text="Выбрать файл из каталога"
+                onclick={() => catalogDialog?.showModal()}
+            >
                 <img class="icon" src="i/catalog.svg" alt="Выбрать файл из каталога" />
             </button>
             <input
@@ -204,33 +227,62 @@
             <button type="button" class="icon" data-text="Запустить программу" onclick={() => machine?.runLoadedFile()}>
                 <img class="icon" src="i/run.svg" alt="Запустить программу" />
             </button>
-            <button type="button" class="icon" class:active={assemblerVisible} data-text="Ассемблер" onclick={toggleAssembler}>
+            <button
+                type="button"
+                class="icon"
+                class:active={assemblerVisible}
+                data-text="Ассемблер"
+                onclick={toggleAssembler}
+            >
                 <img class="icon" src="i/asm.svg" alt="Ассемблер" />
             </button>
-            <button type="button" class="icon" class:active={disassemblerVisible} data-text="Дизассемблер" onclick={toggleDisassembler}>
+            <button
+                type="button"
+                class="icon"
+                class:active={disassemblerVisible}
+                data-text="Дизассемблер"
+                onclick={toggleDisassembler}
+            >
                 <img class="icon" src="i/disasm.svg" alt="Дизассемблер" />
             </button>
-            <button type="button" class="icon" class:active={visualizerVisible} data-text="Визуализация" onclick={toggleVisualizer}>
+            <button
+                type="button"
+                class="icon"
+                class:active={visualizerVisible}
+                data-text="Визуализация"
+                onclick={toggleVisualizer}
+            >
                 <img class="icon" src="i/visualizer.svg" alt="Визуализация" />
             </button>
             <button type="button" class="icon" data-text="Снимок экрана" onclick={() => machine?.ui.screenshot()}>
                 <img class="icon" src="i/screenshot.svg" alt="Снимок экрана" />
             </button>
-            <button type="button" class="icon" data-text="Сохранить память в файл" onclick={() => machine?.ui.memory_snapshot()}>
+            <button
+                type="button"
+                class="icon"
+                data-text="Сохранить память в файл"
+                onclick={() => machine?.ui.memory_snapshot()}
+            >
                 <img class="icon" src="i/memory.svg" alt="Сохранить память в файл" />
-            </button>
-            <button type="button" class="icon" data-text="Сохранить полное состояние" onclick={() => machine?.ui.emulator_snapshot()}>
-                <img class="icon" src="i/snapshot.svg" alt="Сохранить полное состояние" />
-            </button>
-            <button type="button" class="icon" class:active={terminalVisible} data-text="Консоль" onclick={toggleTerminal}>
-                <img class="icon" src="i/terminal.svg" alt="Консоль" />
             </button>
             <button
                 type="button"
                 class="icon"
-                data-text="Включить/выключить звук"
-                onclick={toggleSound}
+                data-text="Сохранить полное состояние"
+                onclick={() => machine?.ui.emulator_snapshot()}
             >
+                <img class="icon" src="i/snapshot.svg" alt="Сохранить полное состояние" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                class:active={terminalVisible}
+                data-text="Консоль"
+                onclick={toggleTerminal}
+            >
+                <img class="icon" src="i/terminal.svg" alt="Консоль" />
+            </button>
+            <button type="button" class="icon" data-text="Включить/выключить звук" onclick={toggleSound}>
                 {#if soundEnabled}
                     <img class="icon" src="i/sound.svg" alt="Включить звук" />
                 {:else}
@@ -239,7 +291,10 @@
             </button>
             <span id="sound_image" class={soundImageVisible ? "visible" : ""}>{soundEnabled ? "🔉" : "🔇"}</span>
             <button>
-                <span style="font-family: monospace; background: white; color: black; padding: 2px 4px; border-radius: 2px">{ui.rusLat ? "РУС" : "ЛАТ"}</span>
+                <span
+                    style="font-family: monospace; background: white; color: black; padding: 2px 4px; border-radius: 2px"
+                    >{ui.rusLat ? "РУС" : "ЛАТ"}</span
+                >
             </button>
         </div>
     </div>
@@ -255,11 +310,7 @@
         <Disassembler memory={machine.memory} pc={() => machine.cpu.pc} onclose={toggleDisassembler} />
     {/if}
     {#if terminalVisible}
-        <Terminal
-            bind:this={terminalRef}
-            onrun={(cmd) => cli?.run(cmd)}
-            onclose={toggleTerminal}
-        />
+        <Terminal bind:this={terminal} onrun={(cmd) => cli?.run(cmd)} onclose={toggleTerminal} />
     {/if}
     <div id="footer" style="display: flex; gap: 10px" class={fullscreen ? "hidden" : ""}>
         <div class="gauge">
@@ -288,8 +339,15 @@
             <div class="gauge">
                 <span class="dimmed">ФАЙЛ</span>
                 <span>{ui.selectedFileName}</span>
-                <span class="dimmed">{ui.selectedFileStart.toString(16).toUpperCase().padStart(4, "0")}-{ui.selectedFileEnd.toString(16).toUpperCase().padStart(4, "0")}</span>
-                <span>{ui.selectedFileSize.toString(16).toUpperCase().padStart(4, "0")}</span>
+                {#if ui.selectedFileSize}
+                    <span class="dimmed"
+                        >{ui.selectedFileStart.toString(16).toUpperCase().padStart(4, "0")}-{ui.selectedFileEnd
+                            .toString(16)
+                            .toUpperCase()
+                            .padStart(4, "0")}</span
+                    >
+                    <span>{ui.selectedFileSize.toString(16).toUpperCase().padStart(4, "0")}</span>
+                {/if}
                 <span class="dimmed">G{ui.selectedFileEntry.toString(16).toUpperCase().padStart(4, "0")}</span>
             </div>
         {/if}
@@ -341,6 +399,7 @@
             <div><mark>d</mark> - дизассемблер</div>
             <div><mark>v</mark> - визуализация</div>
             <div><mark>p</mark> - приостановить процессор</div>
+            <div><mark>c</mark> - сигнал RESET</div>
             <div><mark>r</mark> - перезапустить эмулятор</div>
             <div><mark>s</mark> - звук</div>
             <div><mark>f</mark> - полноэкранный режим</div>

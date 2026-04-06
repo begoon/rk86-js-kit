@@ -516,8 +516,13 @@ export async function main(canvas: HTMLCanvasElement) {
         const { ok, json } = FileParser.parse(binary);
         if (ok) {
             rk86_snapshot_restore(json, machine, simulate_keyboard);
-            console.log(`образ [${name}] загружен, PC=${hex16(json.cpu.pc)}`);
+            const pc = parseInt(json.cpu.pc);
+            console.log(`образ [${name}] загружен, PC=${hex16(pc)}`);
             ui.selectedFileName = name;
+            ui.selectedFileStart = 0;
+            ui.selectedFileEnd = 0;
+            ui.selectedFileSize = 0;
+            ui.selectedFileEntry = pc;
             return;
         }
         try {
@@ -532,7 +537,7 @@ export async function main(canvas: HTMLCanvasElement) {
             selected_file = file;
             ui.selectedFileName = file.name;
             ui.selectedFileStart = file.start;
-            ui.selectedFileEnd = file.end;
+            ui.selectedFileEnd = file.end - 1;
             ui.selectedFileSize = file.end - file.start;
             ui.selectedFileEntry = file.entry;
         } catch (e) {

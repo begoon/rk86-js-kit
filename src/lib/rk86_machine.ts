@@ -21,6 +21,9 @@ export interface Machine {
     reset: () => void;
     restart: () => void;
     pause: (paused: boolean) => void;
+    loadCatalogFile: (name: string) => Promise<void>;
+    runLoadedFile: () => void;
+    uploadFile: (file: File) => Promise<void>;
 }
 
 export interface MachineBuilder {

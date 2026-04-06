@@ -140,9 +140,8 @@
         else if (el.classList.contains("disasm_data_offset")) { dataAddr = addr; renderData(); }
     }
 
-    $effect(() => {
-        if (memory) { goCodePC(); renderData(); }
-    });
+    import { onMount } from "svelte";
+    onMount(() => { goCodePC(); renderData(); });
 </script>
 
 <svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
@@ -156,9 +155,9 @@
     <div class="toolbar">
         <button type="button" onclick={() => codeShift(-1)}>«</button>
         <button type="button" onclick={() => codeShift(-1, true)}>‹</button>
-        <input type="text" bind:value={codeAddr} style="width: calc(4ch + 4px)" />
+        <input type="text" bind:value={codeAddr} style="width: calc(4ch + 4px)" onchange={renderCode} onkeydown={(e) => { if (e.key === "Enter") renderCode(); }} />
         /
-        <input type="number" bind:value={codeLines} style="width: calc(3ch + 4px)" />
+        <input type="number" bind:value={codeLines} style="width: calc(3ch + 4px)" onchange={renderCode} onkeydown={(e) => { if (e.key === "Enter") renderCode(); }} />
         <button type="button" onclick={renderCode}>▶</button>
         <button type="button" onclick={() => codeShift(1, true)}>›</button>
         <button type="button" onclick={() => codeShift(1)}>»</button>
@@ -172,9 +171,9 @@
     <div class="toolbar">
         <button type="button" onclick={() => dataShift(-1)}>«</button>
         <button type="button" onclick={() => dataShift(-1, true)}>‹</button>
-        <input type="text" bind:value={dataAddr} style="width: calc(4ch + 4px)" />
+        <input type="text" bind:value={dataAddr} style="width: calc(4ch + 4px)" onchange={renderData} onkeydown={(e) => { if (e.key === "Enter") renderData(); }} />
         /
-        <input type="number" bind:value={dataLines} style="width: calc(3ch + 4px)" />
+        <input type="number" bind:value={dataLines} style="width: calc(3ch + 4px)" onchange={renderData} onkeydown={(e) => { if (e.key === "Enter") renderData(); }} />
         <button type="button" onclick={renderData}>▶</button>
         <button type="button" onclick={() => dataShift(1, true)}>›</button>
         <button type="button" onclick={() => dataShift(1)}>»</button>

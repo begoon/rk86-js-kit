@@ -24,7 +24,9 @@
         panel.style.right = "auto";
         panel.style.bottom = "auto";
     }
-    function onMouseUp() { dragging = false; }
+    function onMouseUp() {
+        dragging = false;
+    }
 
     function handleKeydown(e: KeyboardEvent) {
         e.stopPropagation();
@@ -78,7 +80,7 @@
         input?.focus();
     }
 
-    export function getHistory(): string[] {
+    export function currentHistory(): string[] {
         return history;
     }
 
@@ -139,7 +141,9 @@
         padding: 0 2px;
         color: lightgreen;
     }
-    .close-btn:hover { color: red; }
+    .close-btn:hover {
+        color: red;
+    }
     .terminal-body {
         background-color: black;
         padding: 4px;

@@ -1,6 +1,7 @@
 import { fromHex, hex16 } from "./hex.js";
 import * as hexMap from "./hex_map";
 import type { RK86File } from "./rk86_file_parser.js";
+import type { Machine } from "./rk86_machine.js";
 
 interface MemorySnapshot {
     vg75_c001_00_cmd: number;
@@ -29,26 +30,27 @@ export class Memory {
     buf: number[] = [];
     update_ruslat: (value: number) => void = () => {};
 
-    machine: any;
-    vg75_c001_00_cmd: number;
-    video_screen_size_x_buf: number;
-    video_screen_size_y_buf: number;
-    ik57_e008_80_cmd: number;
-    vg75_c001_80_cmd: number;
-    cursor_x_buf: number;
-    cursor_y_buf: number;
-    vg75_c001_60_cmd: number;
-    tape_8002_as_output: number;
-    video_memory_base_buf: number;
-    video_memory_size_buf: number;
-    video_memory_base: number;
-    video_memory_size: number;
-    video_screen_size_x: number;
-    video_screen_size_y: number;
-    video_screen_cursor_x: number;
-    video_screen_cursor_y: number;
-    last_access_address: number;
-    last_access_operation: string | undefined;
+    machine: Machine;
+
+    vg75_c001_00_cmd: number = 0;
+    video_screen_size_x_buf: number = 0;
+    video_screen_size_y_buf: number = 0;
+    ik57_e008_80_cmd: number = 0;
+    vg75_c001_80_cmd: number = 0;
+    cursor_x_buf: number = 0;
+    cursor_y_buf: number = 0;
+    vg75_c001_60_cmd: number = 0;
+    tape_8002_as_output: number = 0;
+    video_memory_base_buf: number = 0;
+    video_memory_size_buf: number = 0;
+    video_memory_base: number = 0;
+    video_memory_size: number = 0;
+    video_screen_size_x: number = 0;
+    video_screen_size_y: number = 0;
+    video_screen_cursor_x: number = 0;
+    video_screen_cursor_y: number = 0;
+    last_access_address: number = 0;
+    last_access_operation: string | undefined = undefined;
 
     constructor(machine: any) {
         this.machine = machine;

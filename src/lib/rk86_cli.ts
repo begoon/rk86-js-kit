@@ -2,7 +2,7 @@ import "./format.js";
 import { hex16 } from "./hex.js";
 import { i8080_opcode } from "./i8080_disasm.js";
 import { rk86_check_sum } from "./rk86_check_sum.js";
-import { saveAs } from "./saver";
+import { saveAs } from "./saver.js";
 
 interface Breakpoint {
     type: string;
@@ -139,7 +139,7 @@ export default class CLI {
         );
 
         console.log(
-            `download ${hex16(this.download_cmd_snapshot_address)}:${hex16(
+            `скачивание ${hex16(this.download_cmd_snapshot_address)}:${hex16(
                 this.download_cmd_snapshot_length,
             )} -> ${filename}`,
         );

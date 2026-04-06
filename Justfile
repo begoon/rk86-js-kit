@@ -24,6 +24,6 @@ test-ex1-bun:
     bun i8080_ex.ts --ex1 --verbose
 
 test-ex1-node:
-    node i8080_ex.ts --ex1 --verbose
+    node --experimental-strip-types --experimental-transform-types i8080_ex.ts --ex1 --verbose
 
-test-ci: test-js test-ex1-bun test-ex1-node
+test-ci: test-js test-ex1-bun

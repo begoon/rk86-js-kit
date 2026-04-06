@@ -2,7 +2,7 @@ import { SoundPlayer } from "./SoundPlayer.js";
 
 export class Sound {
     volume = 0.05;
-    stop_timer: ReturnType<typeof setTimeout> | null = null;
+    stop_timer: ReturnType<typeof setTimeout> | NodeJS.Timeout | null = null;
     previous_tone: number | null = null;
     player: SoundPlayer;
 
@@ -20,7 +20,7 @@ export class Sound {
     }
 
     play(tone: number, duration: number) {
-        clearTimeout(this.stop_timer);
+        clearTimeout(this.stop_timer as NodeJS.Timeout);
         if (this.previous_tone !== tone) {
             if (this.previous_tone) this.player.stop();
             this.player.play(tone, this.volume, "square");
