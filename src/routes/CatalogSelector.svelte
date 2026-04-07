@@ -61,6 +61,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="catalog" onkeydown={handleKeydown}>
+    <!-- svelte-ignore a11y_autofocus -->
     <input
         class="filter"
         type="text"
@@ -68,8 +69,9 @@
         bind:value={filter}
         autofocus
     />
-    <div class="grid" bind:this={grid}>
+    <div class="grid" bind:this={grid} role="listbox">
         {#each filtered as name, i}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
             <div
                 class="item"
                 class:selected={i === selectedIndex}

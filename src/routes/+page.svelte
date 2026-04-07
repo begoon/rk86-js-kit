@@ -8,7 +8,7 @@
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
     import Keyboard from "./Keyboard.svelte";
-    import { main as boot } from "./main";
+    import { main as boot, type HostCallbacks } from "./main";
     import Terminal from "./Terminal.svelte";
     import { ui } from "./ui_state.svelte";
     import Visualizer from "./Visualizer.svelte";
@@ -20,10 +20,17 @@
     let canvas = $state<HTMLCanvasElement>();
 
     let machine = $state<Machine>();
+    let emulatorKeyDown: ((code: string) => void) | undefined;
+    let emulatorKeyUp: ((code: string) => void) | undefined;
 
     $effect(() => {
         if (!canvas) return;
-        boot(canvas).then((m) => {
+        const host: HostCallbacks = {
+            canvas,
+            onkeydown: (h) => (emulatorKeyDown = h),
+            onkeyup: (h) => (emulatorKeyUp = h),
+        };
+        boot(host).then((m) => {
             if (!m) {
                 console.error("ошибка при инициализации эмулятора");
                 return;
@@ -116,12 +123,12 @@
             return;
         }
         if (catalogDialog?.open || disassemblerVisible || terminalVisible) return;
-        if (machine) machine.keyboard.onkeydown(e.code);
+        emulatorKeyDown?.(e.code);
     }
 
     function onKeyUp(e: KeyboardEvent) {
         if (catalogDialog?.open || disassemblerVisible || terminalVisible) return;
-        if (machine) machine.keyboard.onkeyup(e.code);
+        emulatorKeyUp?.(e.code);
     }
 
     let paused = $state(false);

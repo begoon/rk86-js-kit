@@ -3,7 +3,7 @@ default: test-js build
 test: test-js test-i8080
 
 build:
-    bun build --compile --target=browser --outfile=index.html main.html
+    bun run build
 
 lint:
     bunx eslint *.ts

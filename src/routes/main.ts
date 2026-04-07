@@ -295,7 +295,14 @@ function command_injector(keyboard: Keyboard, sequence: SequenceAction[], i: num
     setTimeout(() => command_injector(keyboard, sequence, i + 1), +duration);
 }
 
-export async function main(canvas: HTMLCanvasElement) {
+export interface HostCallbacks {
+    canvas: HTMLCanvasElement;
+    onkeydown: (handler: (code: string) => void) => void;
+    onkeyup: (handler: (code: string) => void) => void;
+}
+
+export async function main(host: HostCallbacks) {
+    const { canvas } = host;
     const keyboard = new Keyboard();
     const io = new IO();
 
@@ -401,6 +408,9 @@ export async function main(canvas: HTMLCanvasElement) {
         console.log(`загружен внешний файл [${file.name}], размер ${binary.length} байт`);
         parseAndPlaceFile(machine, simulate_keyboard, file.name, binary);
     };
+
+    host.onkeydown((code) => keyboard.onkeydown(code));
+    host.onkeyup((code) => keyboard.onkeyup(code));
 
     machine.ui.start_update_perf();
     return machine;
