@@ -52,15 +52,15 @@ export class Keyboard {
     }
 
     static key_table: Record<string, [number, number]> = {
-        Home: [0, 0x01],
-        End: [0, 0x02],
+        F8: [0, 0x01],
+        F9: [0, 0x02],
         F5: [0, 0x04],
         F1: [0, 0x08],
         F2: [0, 0x10],
         F3: [0, 0x20],
         F4: [0, 0x40],
         Tab: [1, 0x01],
-        Delete: [1, 0x02],
+        Backquote: [1, 0x02],
         Enter: [1, 0x04],
         Backspace: [1, 0x08],
         ArrowLeft: [1, 0x10],

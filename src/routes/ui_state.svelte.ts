@@ -16,6 +16,8 @@ export const ui = $state({
     tps: 0,
     selectedFileName: "",
     visualizerOpcode: -1,
+    modifierSS: false,
+    modifierUS: false,
     selectedFileStart: 0,
     selectedFileEnd: 0,
     selectedFileSize: 0,

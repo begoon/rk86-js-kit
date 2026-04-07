@@ -1,5 +1,62 @@
 <script lang="ts">
-    let { onclose }: { onclose: () => void } = $props();
+    let {
+        onclose,
+        onkeydown,
+        onkeyup,
+    }: {
+        onclose: () => void;
+        onkeydown?: (code: string) => void;
+        onkeyup?: (code: string) => void;
+    } = $props();
+
+    const PRESS_DURATION = 100;
+
+    const labelToCode: Record<string, string> = {
+        ";": "Semicolon",
+        "+": "Semicolon",
+        ...Object.fromEntries("0123456789".split("").map((d) => [d, `Digit${d}`])),
+        "-": "Minus",
+        "=": "Minus",
+        TAB: "Tab",
+        BS: "Backspace",
+        ENT: "Enter",
+        CTRL: "ControlLeft",
+        "⇧": "ShiftLeft",
+        "`": "Backquote",
+        "[": "BracketLeft",
+        "]": "BracketRight",
+        "\\": "Backslash",
+        ",": "Comma",
+        ".": "Period",
+        "/": "Slash",
+        "'": "Quote",
+        "*": "Semicolon",
+        "←": "ArrowLeft",
+        "→": "ArrowRight",
+        "↑": "ArrowUp",
+        "↓": "ArrowDown",
+        ...Object.fromEntries("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((c) => [c, `Key${c}`])),
+        ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => [`F${n}`, `F${n}`])),
+    };
+
+    function press(code: string) {
+        onkeydown?.(code);
+        setTimeout(() => onkeyup?.(code), PRESS_DURATION);
+    }
+
+    function simulateKey(label: string, shifted: boolean) {
+        const code = labelToCode[label];
+        if (!code) return;
+        if (shifted) {
+            onkeydown?.("ShiftLeft");
+            setTimeout(() => {
+                press(code);
+                setTimeout(() => onkeyup?.("ShiftLeft"), PRESS_DURATION);
+            }, 50);
+        } else {
+            press(code);
+        }
+    }
 
     let panel = $state<HTMLDivElement>();
     let dragging = $state(false);
@@ -19,7 +76,9 @@
         panel.style.right = "auto";
         panel.style.bottom = "auto";
     }
-    function onMouseUp() { dragging = false; }
+    function onMouseUp() {
+        dragging = false;
+    }
 
     const keyboardLayout = [
         [
@@ -39,19 +98,19 @@
             ["ЗБ", "", "BS"],
         ],
         [
-            ["Й", "J", "Й"],
-            ["Ц", "C", "Ц"],
-            ["У", "U", "У"],
-            ["К", "K", "К"],
-            ["Е", "E", "Е"],
-            ["Н", "N", "Н"],
-            ["Г", "G", "Г"],
-            ["Ш", "[", "Ш"],
-            ["Щ", "]", "Щ"],
-            ["З", "Z", "З"],
-            ["Х", "H", "Х"],
-            ["*", ":", "*"],
-            ["BK", "", "BK"],
+            ["Й", "J", "J"],
+            ["Ц", "C", "C"],
+            ["У", "U", "U"],
+            ["К", "K", "K"],
+            ["Е", "E", "E"],
+            ["Н", "N", "N"],
+            ["Г", "G", "G"],
+            ["Ш", "[", "["],
+            ["Щ", "]", "]"],
+            ["З", "Z", "Z"],
+            ["Х", "H", "H"],
+            ["*", ":", "F6"],
+            ["BK", "", "ENT"],
         ],
         [
             ["СС", "", "CTRL"],
@@ -67,12 +126,12 @@
             ["Ж", "V", "V"],
             ["Э", "\\", "\\"],
             [">", ".", "."],
-            ["ПС", "", "DEL"],
+            ["ПС", "", "`"],
         ],
         [
             ["УС", "", "⇧"],
             ["Я", "Q", "Q"],
-            ["Ч", "^", "`"],
+            ["Ч", "^", "'"],
             ["С", "S", "S"],
             ["М", "M", "M"],
             ["И", "I", "I"],
@@ -87,9 +146,9 @@
     ];
 
     const padLayout = [
-        ["↖︎", "", "HOME"],
+        ["↖︎", "", "F8"],
         ["Ф1", "", "F1"],
-        ["СТР", "", "END"],
+        ["СТР", "", "F9"],
         ["←", "", "←"],
         ["↑", "", "↑"],
         ["→", "", "→"],
@@ -110,32 +169,32 @@
         <button class="close-btn" type="button" onclick={onclose}>&times;</button>
     </div>
     <div class="keyboard">
-    <div class="keyboard-main">
-        {#each keyboardLayout as row, i}
-            <div class="keyboard-row" style={i % 2 === 1 ? "margin-left: 2em" : ""}>
-                {#each row as labels}
-                    <div class="key">
-                        {#each labels as label}
-                            <div>{label || "\u00A0"}</div>
-                        {/each}
-                    </div>
-                {/each}
-            </div>
-        {/each}
+        <div class="keyboard-main">
+            {#each keyboardLayout as row, i}
+                <div class="keyboard-row" style={i % 2 === 1 ? "margin-left: 2em" : ""}>
+                    {#each row as labels}
+                        <div class="key">
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <div class="clickable" onclick={() => simulateKey(labels[2], false)}>{labels[0] || "\u00A0"}</div>
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <div class="clickable" onclick={() => simulateKey(labels[2], i === 0)}>{labels[1] || "\u00A0"}</div>
+                            <div class={/^F\d/.test(labels[2]) ? "fkey" : ""}>{labels[2] || "\u00A0"}</div>
+                        </div>
+                    {/each}
+                </div>
+            {/each}
+        </div>
+        <div class="keyboard-pad">
+            {#each padLayout as labels, i}
+                <div class="key" style={i === 9 ? "width: 6em; grid-column: span 2" : ""}>
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <div class="clickable" onclick={() => simulateKey(labels[2], false)}>{labels[0] || "\u00A0"}</div>
+                    <div>{labels[1] || "\u00A0"}</div>
+                    <div class={/^F\d/.test(labels[2]) ? "fkey" : ""}>{labels[2] || "\u00A0"}</div>
+                </div>
+            {/each}
+        </div>
     </div>
-    <div class="keyboard-pad">
-        {#each padLayout as labels, i}
-            <div
-                class="key"
-                style={i === 9 ? "width: 6em; grid-column: span 2" : ""}
-            >
-                {#each labels as label}
-                    <div>{label || "\u00A0"}</div>
-                {/each}
-            </div>
-        {/each}
-    </div>
-</div>
 </div>
 
 <style>
@@ -168,7 +227,9 @@
         line-height: 1;
         padding: 0 2px;
     }
-    .close-btn:hover { color: red; }
+    .close-btn:hover {
+        color: red;
+    }
     .keyboard {
         display: flex;
         gap: 1em;
@@ -192,6 +253,16 @@
     }
     .key div:last-child {
         padding-top: 1em;
+        color: lightblue;
+    }
+    .fkey {
+        color: lightgreen !important;
+    }
+    .clickable {
+        cursor: pointer;
+    }
+    .clickable:active {
+        background-color: #555;
     }
     .keyboard-pad {
         display: grid;

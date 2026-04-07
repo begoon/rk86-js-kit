@@ -75,8 +75,8 @@ export class UI {
         this.reset();
     }
 
-    update_ruslat = (value: boolean): void => {
-        ui.rusLat = value;
+    update_ruslat = (value: number): void => {
+        ui.rusLat = Boolean(value);
     };
 
     update_perf() {
@@ -159,13 +159,13 @@ const KEY_CODES: Record<number, string> = {
     16: "ShiftRight",
     17: "ControlLeft",
     32: "Space",
-    35: "End",
-    36: "Home",
+    35: "F9",
+    36: "F8",
     37: "ArrowLeft",
     38: "ArrowUp",
     39: "ArrowRight",
     40: "ArrowDown",
-    46: "Delete",
+    46: "Backquote",
     48: "Digit0",
     49: "Digit1",
     50: "Digit2",
@@ -331,6 +331,8 @@ export async function main(host: HostCallbacks) {
     machine.runner = new Runner(machine);
     console.log("исполнитель инициализирован");
 
+    machine.memory.update_ruslat = machine.ui.update_ruslat;
+
     function simulate_keyboard(commands: SequenceAction[]): void {
         const queue = convert_keyboard_sequence(commands);
         command_injector(keyboard, queue, 0);
@@ -409,8 +411,13 @@ export async function main(host: HostCallbacks) {
         parseAndPlaceFile(machine, simulate_keyboard, file.name, binary);
     };
 
-    host.onkeydown((code) => keyboard.onkeydown(code));
-    host.onkeyup((code) => keyboard.onkeyup(code));
+    function updateModifiers() {
+        ui.modifierSS = (keyboard.modifiers & 0x20) === 0;
+        ui.modifierUS = (keyboard.modifiers & 0x40) === 0;
+    }
+
+    host.onkeydown((code) => { keyboard.onkeydown(code); updateModifiers(); });
+    host.onkeyup((code) => { keyboard.onkeyup(code); updateModifiers(); });
 
     machine.ui.start_update_perf();
     return machine;

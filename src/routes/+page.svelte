@@ -339,6 +339,10 @@
             <span>{ui.screenHeight}</span>
         </div>
         <div class="gauge">
+            <span class={ui.modifierUS ? "modifier_active" : "dimmed"}>УС</span>
+            <span class={ui.modifierSS ? "modifier_active" : "dimmed"}>СС</span>
+        </div>
+        <div class="gauge">
             <span class="dimmed">ЛЕНТА</span>
             <span class={ui.tapeHighlight ? "tape_active" : ""}>{String(ui.tapeWrittenBytes).padStart(4, "0")}</span>
         </div>
@@ -369,7 +373,7 @@
     }}
 >
     <div>
-        <h1 style="font-weight: bold">cmd-k + ...</h1>
+        <h1 style="font-weight: bold">CMD-k + ...</h1>
         <style>
             mark {
                 background-color: #ffcc00;
@@ -385,7 +389,8 @@
                     white-space: nowrap;
                     text-align: left;
                     display: grid;
-                    grid-template-columns: 1.5em auto;
+                    grid-template-columns: 2em auto;
+                    gap: 0 0.5em;
                 }
                 #shortcuts-panel mark {
                     background-color: #ffcc00;
@@ -398,26 +403,30 @@
                 }
             </style>
             <!-- --- -->
-            <div><mark>l</mark> - выбрать файл из каталога</div>
-            <div><mark>u</mark> - загрузить внешний файл</div>
-            <div><mark>g</mark> - запустить программу</div>
-            <div><mark>k</mark> - консоль</div>
-            <div><mark>a</mark> - ассемблер</div>
-            <div><mark>d</mark> - дизассемблер</div>
-            <div><mark>v</mark> - визуализация</div>
-            <div><mark>p</mark> - приостановить процессор</div>
-            <div><mark>c</mark> - сигнал RESET</div>
-            <div><mark>r</mark> - перезапустить эмулятор</div>
-            <div><mark>s</mark> - звук</div>
-            <div><mark>f</mark> - полноэкранный режим</div>
-            <div><mark>w</mark> - сохранить состояние эмулятора</div>
-            <div><mark>b</mark> - помощь по клавиатуре</div>
+            <div><mark>l</mark> выбрать файл из каталога</div>
+            <div><mark>u</mark> загрузить внешний файл</div>
+            <div><mark>g</mark> запустить программу</div>
+            <div><mark>k</mark> консоль</div>
+            <div><mark>a</mark> ассемблер</div>
+            <div><mark>d</mark> дизассемблер</div>
+            <div><mark>v</mark> визуализация</div>
+            <div><mark>p</mark> приостановить процессор</div>
+            <div><mark>c</mark> сигнал RESET</div>
+            <div><mark>r</mark> перезапустить эмулятор</div>
+            <div><mark>s</mark> звук</div>
+            <div><mark>f</mark> полноэкранный режим</div>
+            <div><mark>w</mark> сохранить состояние эмулятора</div>
+            <div><mark>b</mark> помощь по клавиатуре</div>
         </div>
     </div>
 </dialog>
 
 {#if keyboardVisible}
-    <Keyboard onclose={() => (keyboardVisible = false)} />
+    <Keyboard
+        onclose={() => (keyboardVisible = false)}
+        onkeydown={(code) => emulatorKeyDown?.(code)}
+        onkeyup={(code) => emulatorKeyUp?.(code)}
+    />
 {/if}
 
 <dialog
@@ -503,6 +512,9 @@
     }
     .dimmed {
         opacity: 0.6;
+    }
+    .modifier_active {
+        color: #ffcc00;
     }
     .gauge {
         display: flex;
