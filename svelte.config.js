@@ -9,7 +9,11 @@ const config = {
     preprocess: vitePreprocess(),
 
     kit: {
-        adapter: adapter({ fallback: "index.html" }),
+        adapter: adapter({ strict: false }),
+        prerender: {
+            entries: ["*", "/", "/catalog"],
+            handleHttpError: "warn",
+        },
         paths: { base: process.env.BASE_PATH || "" },
         output: { bundleStrategy: "inline" },
         version: {

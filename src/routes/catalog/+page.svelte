@@ -21,7 +21,7 @@
     let zoomIndex = $state(0);
 
     function openZoom(entry: (typeof catalog)[0], index: number) {
-        zoomImages = entry.screenshots.map((s) => `/catalog/${entry.name}/${s}`);
+        zoomImages = entry.screenshots.map((s) => `${resolve('/catalog')}/${entry.name}/${s}`);
         zoomIndex = index;
     }
 
@@ -79,7 +79,7 @@
                         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                         <img
                             class="screen"
-                            src="/catalog/{entry.name}/{screenshot}"
+                            src="{resolve('/catalog')}/{entry.name}/{screenshot}"
                             alt="{entry.name} скриншот"
                             loading="lazy"
                             onclick={() => openZoom(entry, si)}
