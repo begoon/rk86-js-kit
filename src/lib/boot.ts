@@ -1,19 +1,19 @@
-import { I8080 } from "$lib/i8080";
-import { Keyboard } from "$lib/rk86_keyboard";
-import { hex16 } from "../lib/hex.js";
-import type { RK86File } from "../lib/rk86_file_parser.js";
-import * as FileParser from "../lib/rk86_file_parser.js";
-import { rk86_font_image } from "../lib/rk86_font.js";
-import type { SequenceAction } from "../lib/rk86_keyboard_injector.js";
-import { convert_keyboard_sequence } from "../lib/rk86_keyboard_injector.js";
-import type { Machine, MachineBuilder } from "../lib/rk86_machine.js";
-import { Memory } from "../lib/rk86_memory.js";
-import { Runner } from "../lib/rk86_runner.js";
-import { Screen } from "../lib/rk86_screen.js";
-import { rk86_snapshot, rk86_snapshot_restore } from "../lib/rk86_snapshot.js";
-import { Tape } from "../lib/rk86_tape.js";
-import { saveAs } from "../lib/saver.js";
-import { ui } from "./ui_state.svelte";
+import { I8080 } from "./i8080.js";
+import { Keyboard } from "./rk86_keyboard.js";
+import { hex16 } from "./hex.js";
+import type { RK86File } from "./rk86_file_parser.js";
+import * as FileParser from "./rk86_file_parser.js";
+import { rk86_font_image } from "./rk86_font.js";
+import type { SequenceAction } from "./rk86_keyboard_injector.js";
+import { convert_keyboard_sequence } from "./rk86_keyboard_injector.js";
+import type { Machine, MachineBuilder } from "./rk86_machine.js";
+import { Memory } from "./rk86_memory.js";
+import { Runner } from "./rk86_runner.js";
+import { Screen } from "./rk86_screen.js";
+import { rk86_snapshot, rk86_snapshot_restore } from "./rk86_snapshot.js";
+import { Tape } from "./rk86_tape.js";
+import { saveAs } from "./saver.js";
+import { ui } from "../routes/ui_state.svelte";
 const elements = new Map();
 
 // ---

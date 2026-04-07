@@ -3,14 +3,18 @@ import { Tracer } from "./test_console_tracer.ts";
 import { load_file } from "./test_load_file.ts";
 import { IO, Memory } from "./test_machine.ts";
 
-export async function executor(filename: string, verbose = false, timeout = 60 * 20): Promise<{success: boolean, output: string[], duration: string}> {
+export async function executor(
+    filename: string,
+    verbose = false,
+    timeout = 60 * 20,
+): Promise<{ success: boolean; output: string[]; duration: string }> {
     const start = performance.now();
 
     const tracer = new Tracer(verbose);
 
     const machine: any = { io: new IO() };
 
-    const memory = new Memory(machine);
+    const memory = new Memory();
     await load_file(filename, memory, tracer);
     machine.memory = memory;
 

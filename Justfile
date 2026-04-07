@@ -27,3 +27,11 @@ test-ex1-node:
     bunx tsx --experimental-strip-types --experimental-transform-types i8080_ex.ts --ex1 --verbose
 
 test-ci: test-js test-ex1-bun
+
+release-alpha:
+    BASE_PATH=/alpha bun run build 
+    cp -R ./build/* ../rk86-js/docs/alpha/ 
+
+release-beta:
+    BASE_PATH=/beta bun run build 
+    cp -R ./build/* ../rk86-js/docs/beta/

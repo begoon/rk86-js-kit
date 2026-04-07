@@ -165,7 +165,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="keyboard-panel" bind:this={panel} onmousedown={onMouseDown}>
     <div class="titlebar">
-        <span>Клавиатура</span>
+        <span>Клавиатура (кликайте нужные клавиши)</span>
         <button class="close-btn" type="button" onclick={onclose}>&times;</button>
     </div>
     <div class="keyboard">
@@ -175,9 +175,13 @@
                     {#each row as labels}
                         <div class="key">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div class="clickable" onclick={() => simulateKey(labels[2], false)}>{labels[0] || "\u00A0"}</div>
+                            <div class="clickable" onclick={() => simulateKey(labels[2], false)}>
+                                {labels[0] || "\u00A0"}
+                            </div>
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div class="clickable" onclick={() => simulateKey(labels[2], i === 0)}>{labels[1] || "\u00A0"}</div>
+                            <div class="clickable" onclick={() => simulateKey(labels[2], i === 0)}>
+                                {labels[1] || "\u00A0"}
+                            </div>
                             <div class={/^F\d/.test(labels[2]) ? "fkey" : ""}>{labels[2] || "\u00A0"}</div>
                         </div>
                     {/each}

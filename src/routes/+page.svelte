@@ -4,11 +4,13 @@
     let shortcutsDialog = $state<HTMLDialogElement>();
     let hintText = $state("");
 
+    import { resolve } from "$app/paths";
+    import { version } from "$lib/rk86_version";
+    import { main as boot, type HostCallbacks } from "$lib/boot";
     import CLI from "$lib/rk86_cli";
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
     import Keyboard from "./Keyboard.svelte";
-    import { main as boot, type HostCallbacks } from "./main";
     import Terminal from "./Terminal.svelte";
     import { ui } from "./ui_state.svelte";
     import Visualizer from "./Visualizer.svelte";
@@ -98,6 +100,7 @@
         k: toggleTerminal,
         b: () => (keyboardVisible = !keyboardVisible),
         l: () => catalogDialog?.showModal(),
+        o: () => window.open(resolve("/catalog"), "_blank"),
         u: () => uploadInput?.click(),
         g: () => machine?.runLoadedFile(),
         w: () => machine?.ui.emulator_snapshot(),
@@ -162,11 +165,11 @@
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
 <main
     onmouseover={(e) => {
-        const button = (e.target as HTMLElement).closest("button[data-text]") as HTMLElement | null;
+        const button = (e.target as HTMLElement).closest("[data-text]") as HTMLElement | null;
         hintText = button?.dataset.text ?? "";
     }}
     onmouseout={(e) => {
-        const button = (e.target as HTMLElement).closest("button[data-text]") as HTMLElement | null;
+        const button = (e.target as HTMLElement).closest("[data-text]") as HTMLElement | null;
         if (button) hintText = "";
     }}
 >
@@ -199,6 +202,9 @@
         <button type="button" class="icon" data-text="Помощь" onclick={() => window.open("help.html", "_blank")}>
             <img class="icon" src="i/help.svg" alt="Помощь" />
         </button>
+        <a href={resolve("/catalog")} class="icon" data-text="Каталог программ">
+            <img class="icon" src="i/open-catalog.svg" alt="Каталог программ" />
+        </a>
         <!-- Кнопки справа -->
         <div style="margin-left: auto; display: flex; align-items: center; gap: 4px">
             <button class="icon" data-text="Запись на ленту">
@@ -344,24 +350,29 @@
         </div>
         <div class="gauge">
             <span class="dimmed">ЛЕНТА</span>
-            <span class={ui.tapeHighlight ? "tape_active" : ""}>{String(ui.tapeWrittenBytes).padStart(4, "0")}</span>
+            <span class={ui.tapeHighlight ? "tape_active" : ""}>{ui.tapeWrittenBytes.toString(16).toUpperCase().padStart(4, "0")}</span>
+        </div>
+        <div class="gauge">
+            <span class="dimmed">ВЕРСИЯ</span>
+            <span>{version}</span>
         </div>
         {#if ui.selectedFileName}
             <div class="gauge">
                 <span class="dimmed">ФАЙЛ</span>
                 <span>{ui.selectedFileName}</span>
                 {#if ui.selectedFileSize}
-                    <span class="dimmed"
-                        >{ui.selectedFileStart.toString(16).toUpperCase().padStart(4, "0")}-{ui.selectedFileEnd
+                    <span class="dimmed">
+                        {ui.selectedFileStart.toString(16).toUpperCase().padStart(4, "0")}-{ui.selectedFileEnd
                             .toString(16)
                             .toUpperCase()
-                            .padStart(4, "0")}</span
-                    >
+                            .padStart(4, "0")}
+                    </span>
                     <span>{ui.selectedFileSize.toString(16).toUpperCase().padStart(4, "0")}</span>
                 {/if}
                 <span class="dimmed">G{ui.selectedFileEntry.toString(16).toUpperCase().padStart(4, "0")}</span>
             </div>
         {/if}
+        <button type="button" id="shortcut-hint" onclick={() => shortcutsDialog?.showModal()}>cmd/ctrl-k</button>
     </div>
 </main>
 
@@ -403,7 +414,8 @@
                 }
             </style>
             <!-- --- -->
-            <div><mark>l</mark> выбрать файл из каталога</div>
+            <div><mark>l</mark> выбрать файл</div>
+            <div><mark>o</mark> открыть каталог</div>
             <div><mark>u</mark> загрузить внешний файл</div>
             <div><mark>g</mark> запустить программу</div>
             <div><mark>k</mark> консоль</div>
@@ -448,8 +460,6 @@
 <style>
     :global(body) {
         margin: 0;
-        background-color: #000000;
-        color: #ffffff;
         font-family: sans-serif;
     }
     #header,
@@ -521,6 +531,7 @@
         width: fit-content;
         height: fit-content;
         gap: 4px;
+        font-family: monospace;
     }
     #shortcuts {
         position: fixed;
@@ -554,6 +565,17 @@
         outline: none;
         border-radius: 8px;
     }
+    #shortcut-hint {
+        all: unset;
+        margin-left: auto;
+        opacity: 0.3;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    #shortcut-hint:hover {
+        opacity: 0.7;
+    }
     #hint {
         position: fixed;
         right: 0;
@@ -582,6 +604,8 @@
         align-items: start;
         justify-content: center;
         overflow: hidden;
+        background-color: #000000;
+        color: #ffffff;
     }
     .tape_active {
         color: white;
