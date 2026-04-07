@@ -126,6 +126,8 @@ document.querySelector("radio86-emulator").addEventListener("ready", (e) => {
 
 Файл `demo.html` содержит пример с четырьмя независимыми эмуляторами.
 
+![Демо веб-компонента](web-component.png)
+
 ## Структура проекта
 
 ```
