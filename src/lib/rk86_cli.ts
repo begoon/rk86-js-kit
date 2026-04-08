@@ -546,10 +546,14 @@ export default class CLI {
         if (argv.length > 0) {
             const cmd = argv[0];
             const args = argv.slice(1);
-            const [handler, description] = this.commands[cmd.toLowerCase()];
-            console.log(description, args);
-            if (handler) handler.call(this, args);
-            else this.bad_command();
+            const entry = this.commands[cmd.toLowerCase()];
+            if (entry) {
+                const [handler, description] = entry;
+                console.log(description, args);
+                handler.call(this, args);
+            } else {
+                this.put("?");
+            }
         }
     }
 }

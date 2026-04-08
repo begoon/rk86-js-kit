@@ -79,13 +79,9 @@
         if (machine) machine.ui.visualizer_visible = visualizerVisible;
     }
 
-    function toggleDisassembler() {
-        disassemblerVisible = !disassemblerVisible;
-    }
-
-    function toggleTerminal() {
-        terminalVisible = !terminalVisible;
-        if (terminalVisible) setTimeout(() => terminal?.focus(), 0);
+    function toggleDebugger() {
+        debuggerVisible = !debuggerVisible;
+        if (debuggerVisible) setTimeout(() => terminal?.focus(), 0);
     }
 
     const shortcuts: Record<string, () => void> = {
@@ -96,8 +92,7 @@
         s: toggleSound,
         a: toggleAssembler,
         v: toggleVisualizer,
-        d: toggleDisassembler,
-        k: toggleTerminal,
+        d: toggleDebugger,
         b: () => (keyboardVisible = !keyboardVisible),
         l: () => catalogDialog?.showModal(),
         o: () => window.open(resolve("/catalog"), "_blank"),
@@ -125,12 +120,14 @@
             }
             return;
         }
-        if (catalogDialog?.open || disassemblerVisible || terminalVisible) return;
+        if (catalogDialog?.open) return;
+        if (debuggerVisible && !canvasFocused) return;
         emulatorKeyDown?.(e.code);
     }
 
     function onKeyUp(e: KeyboardEvent) {
-        if (catalogDialog?.open || disassemblerVisible || terminalVisible) return;
+        if (catalogDialog?.open) return;
+        if (debuggerVisible && !canvasFocused) return;
         emulatorKeyUp?.(e.code);
     }
 
@@ -139,8 +136,8 @@
 
     let assemblerVisible = $state(false);
     let visualizerVisible = $state(false);
-    let disassemblerVisible = $state(false);
-    let terminalVisible = $state(false);
+    let debuggerVisible = $state(false);
+    let canvasFocused = $state(false);
 
     let terminal = $state<Terminal>();
 
@@ -252,11 +249,11 @@
             <button
                 type="button"
                 class="icon"
-                class:active={disassemblerVisible}
-                data-text="Дизассемблер"
-                onclick={toggleDisassembler}
+                class:active={debuggerVisible}
+                data-text="Отладчик"
+                onclick={toggleDebugger}
             >
-                <img class="icon" src="i/disasm.svg" alt="Дизассемблер" />
+                <img class="icon" src="i/debug.svg" alt="Отладчик" />
             </button>
             <button
                 type="button"
@@ -286,15 +283,6 @@
             >
                 <img class="icon" src="i/snapshot.svg" alt="Сохранить полное состояние" />
             </button>
-            <button
-                type="button"
-                class="icon"
-                class:active={terminalVisible}
-                data-text="Консоль"
-                onclick={toggleTerminal}
-            >
-                <img class="icon" src="i/terminal.svg" alt="Консоль" />
-            </button>
             <button type="button" class="icon" data-text="Включить/выключить звук" onclick={toggleSound}>
                 {#if soundEnabled}
                     <img class="icon" src="i/sound.svg" alt="Включить звук" />
@@ -312,18 +300,37 @@
         </div>
     </div>
     <div id="hint" style="opacity: {hintText ? 1 : 0}">{hintText}</div>
-    <canvas bind:this={canvas} style={assemblerVisible ? "display: none" : ""}></canvas>
-    {#if assemblerVisible}
-        <iframe id="assembler_panel" src="i8080asm.html" title="Ассемблер"></iframe>
+    {#if debuggerVisible && machine}
+        <div class="debugger-layout">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+                class="debugger-canvas-wrap"
+                class:canvas-focused={canvasFocused}
+                onclick={() => (canvasFocused = true)}
+                data-text={canvasFocused ? "" : "Кликнуть для ввода"}
+            >
+                <canvas bind:this={canvas}></canvas>
+            </div>
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="debugger-disasm" onclick={() => (canvasFocused = false)}>
+                <Disassembler memory={machine.memory} pc={() => machine!.cpu.pc} onclose={toggleDebugger} embedded />
+            </div>
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="debugger-terminal" onclick={() => { canvasFocused = false; terminal?.focus(); }}>
+                <Terminal bind:this={terminal} onrun={(cmd) => cli?.run(cmd)} onclose={toggleDebugger} embedded />
+            </div>
+        </div>
+    {:else}
+        <canvas bind:this={canvas} style={assemblerVisible ? "display: none" : ""}></canvas>
+        {#if assemblerVisible}
+            <iframe id="assembler_panel" src="i8080asm.html" title="Ассемблер"></iframe>
+        {/if}
     {/if}
     {#if visualizerVisible}
         <Visualizer onclose={toggleVisualizer} />
-    {/if}
-    {#if disassemblerVisible && machine}
-        <Disassembler memory={machine.memory} pc={() => machine!.cpu.pc} onclose={toggleDisassembler} />
-    {/if}
-    {#if terminalVisible}
-        <Terminal bind:this={terminal} onrun={(cmd) => cli?.run(cmd)} onclose={toggleTerminal} />
     {/if}
     <div id="footer" style="display: flex; gap: 10px" class={fullscreen ? "hidden" : ""}>
         <div class="gauge">
@@ -418,9 +425,8 @@
             <div><mark>o</mark> открыть каталог</div>
             <div><mark>u</mark> загрузить внешний файл</div>
             <div><mark>g</mark> запустить программу</div>
-            <div><mark>k</mark> консоль</div>
             <div><mark>a</mark> ассемблер</div>
-            <div><mark>d</mark> дизассемблер</div>
+            <div><mark>d</mark> отладчик</div>
             <div><mark>v</mark> визуализация</div>
             <div><mark>p</mark> приостановить процессор</div>
             <div><mark>c</mark> сигнал RESET</div>
@@ -508,6 +514,44 @@
     }
     #sound_image.visible {
         opacity: 1;
+    }
+    .debugger-layout {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto 1fr;
+        gap: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+    .debugger-canvas-wrap {
+        grid-row: 1;
+        grid-column: 1;
+        width: fit-content;
+        height: fit-content;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    .debugger-canvas-wrap canvas {
+        display: block;
+        image-rendering: pixelated;
+    }
+    .debugger-canvas-wrap:hover,
+    .canvas-focused {
+        border-color: #4a9;
+    }
+    .debugger-disasm {
+        grid-row: 1 / 3;
+        grid-column: 2;
+        overflow: auto;
+        border-left: 1px solid #333;
+    }
+    .debugger-terminal {
+        grid-row: 2;
+        grid-column: 1;
+        overflow: auto;
+        border-top: 1px solid #333;
     }
     canvas {
         flex: 1;

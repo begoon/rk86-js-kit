@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { onrun, onclose }: { onrun: (cmd: string) => void; onclose: () => void } = $props();
+    let { onrun, onclose, embedded = false }: { onrun: (cmd: string) => void; onclose: () => void; embedded?: boolean } = $props();
 
     let panel = $state<HTMLDivElement>();
     let output = $state<HTMLDivElement>();
@@ -89,14 +89,16 @@
     });
 </script>
 
-<svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} />
+<svelte:window on:mousemove={embedded ? undefined : onMouseMove} on:mouseup={embedded ? undefined : onMouseUp} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="terminal-panel" bind:this={panel} onmousedown={onMouseDown}>
-    <div class="titlebar">
-        <span>Консоль</span>
-        <button class="close-btn" type="button" onclick={onclose}>&times;</button>
-    </div>
+<div class={embedded ? "terminal-embedded" : "terminal-panel"} bind:this={panel} onmousedown={embedded ? undefined : onMouseDown}>
+    {#if !embedded}
+        <div class="titlebar">
+            <span>Консоль</span>
+            <button class="close-btn" type="button" onclick={onclose}>&times;</button>
+        </div>
+    {/if}
     <div class="terminal-body">
         <div class="output" bind:this={output}></div>
         <!-- svelte-ignore a11y_autofocus -->
@@ -123,6 +125,12 @@
         cursor: move;
         user-select: none;
     }
+    .terminal-embedded {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
     .titlebar {
         display: flex;
         justify-content: space-between;
@@ -147,14 +155,20 @@
     .terminal-body {
         background-color: black;
         padding: 4px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
     .output {
         height: 30em;
+        flex: 1;
         color: lightgreen;
         font-family: monospace;
         font-size: small;
         overflow-y: auto;
         margin-bottom: 0.5em;
+        white-space: pre;
     }
     .input {
         width: 100%;
