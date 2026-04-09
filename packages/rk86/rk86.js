@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 // @bun
 var __defProp = Object.defineProperty;
 var __returnValue = (v) => v;

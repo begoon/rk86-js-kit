@@ -35,5 +35,14 @@ release-beta:
 
 release: release-beta release-alpha
 
+build-terminal:
+    bun build src/lib/rk86_terminal.ts --outfile ./rk86.ts --target=bun
+    echo '#!/usr/bin/env bun' | cat - ./rk86.ts > packages/rk86/rk86.js
+    chmod +x packages/rk86/rk86.js
+    rm -f packages/rk86/rk86 packages/rk86/rk86.ts
+
+publish-terminal: build-terminal
+    cd packages/rk86 && npm publish
+
 terminal *args='':
     bun src/lib/rk86_terminal.ts {{args}}
