@@ -1,4 +1,4 @@
-import { I8080 } from "./src/lib/i8080.ts";
+import { I8080 } from "../src/lib/i8080.ts";
 import { Tracer } from "./test_console_tracer.ts";
 import { load_file } from "./test_load_file.ts";
 import { IO, Memory } from "./test_machine.ts";
@@ -12,14 +12,13 @@ export async function executor(
 
     const tracer = new Tracer(verbose);
 
-    const machine: any = { io: new IO() };
-
+    const io = new IO();
     const memory = new Memory();
     await load_file(filename, memory, tracer);
-    machine.memory = memory;
 
     memory.write(5, 0xc9); // Add RET at 0x0005 to handle "CALL 5".
 
+    const machine = { io, memory } as { io: IO; memory: Memory; cpu: I8080 };
     const cpu = new I8080(machine);
     machine.cpu = cpu;
 

@@ -1,8 +1,25 @@
 import { fromHex, hex16 } from "./hex.js";
+import type { Machine } from "./rk86_machine.js";
+
+export interface ScreenSnapshot {
+    scale_x: number;
+    scale_y: number;
+    width: number;
+    height: number;
+    cursor_state: number;
+    cursor_x: number;
+    cursor_y: number;
+    video_memory_base: string;
+    video_memory_size: string;
+    light_pen_x: number;
+    light_pen_y: number;
+    light_pen_active: number;
+}
+
 export class Screen {
     static #update_rate = 25;
 
-    machine: any;
+    machine: Machine;
     cursor_rate: number;
     char_width: number;
     char_height: number;
@@ -25,7 +42,7 @@ export class Screen {
     light_pen_active: number;
     ctx!: CanvasRenderingContext2D;
 
-    constructor(machine: any) {
+    constructor(machine: Machine) {
         this.machine = machine;
 
         this.cursor_rate = 500;
@@ -59,7 +76,7 @@ export class Screen {
         this.light_pen_active = 0;
     }
 
-    export() {
+    export(): ScreenSnapshot {
         const h16 = (n: number) => "0x" + hex16(n);
         return {
             scale_x: this.scale_x,
@@ -77,7 +94,7 @@ export class Screen {
         };
     }
 
-    import(snapshot: any) {
+    import(snapshot: ScreenSnapshot) {
         const h = fromHex;
         this.scale_x = h(snapshot.scale_x);
         this.scale_y = h(snapshot.scale_y);
@@ -108,10 +125,10 @@ export class Screen {
         this.machine.ui.canvas.onmousedown = () => (this.light_pen_active = 1);
     }
 
-    cache: boolean[] = [];
+    cache: number[] = [];
 
     init_cache(sz: number): void {
-        for (let i = 0; i < sz; ++i) this.cache[i] = true;
+        for (let i = 0; i < sz; ++i) this.cache[i] = -1;
     }
 
     draw_char(x: number, y: number, ch: number): void {
@@ -156,7 +173,7 @@ export class Screen {
     }
 
     init() {
-        this.ctx = this.machine.ui.canvas.getContext("2d");
+        this.ctx = this.machine.ui.canvas.getContext("2d")!;
     }
 
     disable_smoothing() {

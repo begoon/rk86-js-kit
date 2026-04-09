@@ -1,9 +1,10 @@
-import { I8080 } from "./i8080.js";
-import { Keyboard } from "./rk86_keyboard.js";
+import { ui } from "../routes/state.svelte";
 import { hex16 } from "./hex.js";
+import { I8080 } from "./i8080.js";
 import type { RK86File } from "./rk86_file_parser.js";
 import * as FileParser from "./rk86_file_parser.js";
 import { rk86_font_image } from "./rk86_font.js";
+import { Keyboard } from "./rk86_keyboard.js";
 import type { SequenceAction } from "./rk86_keyboard_injector.js";
 import { convert_keyboard_sequence } from "./rk86_keyboard_injector.js";
 import type { Machine, MachineBuilder } from "./rk86_machine.js";
@@ -13,7 +14,6 @@ import { Screen } from "./rk86_screen.js";
 import { rk86_snapshot, rk86_snapshot_restore } from "./rk86_snapshot.js";
 import { Tape } from "./rk86_tape.js";
 import { saveAs } from "./saver.js";
-import { ui } from "../routes/ui_state.svelte";
 const elements = new Map();
 
 // ---
@@ -35,9 +35,9 @@ export class UI {
     screenshot_count = 1;
     memory_snapshot_name = "rk86-memory";
     memory_snapshot_count = 1;
-    terminal: any;
-    i8080disasm: any;
-    visualizer: any;
+    terminal: { put: (str: string) => void; history: string[] };
+    i8080disasm: unknown;
+    visualizer: unknown;
     visualizer_visible = false;
     toggle_assembler: (() => void) | undefined;
     on_visualizer_hit: ((opcode: number) => void) | undefined;
@@ -417,8 +417,14 @@ export async function main(host: HostCallbacks) {
         ui.modifierUS = (keyboard.modifiers & 0x40) === 0;
     }
 
-    host.onkeydown((code) => { keyboard.onkeydown(code); updateModifiers(); });
-    host.onkeyup((code) => { keyboard.onkeyup(code); updateModifiers(); });
+    host.onkeydown((code) => {
+        keyboard.onkeydown(code);
+        updateModifiers();
+    });
+    host.onkeyup((code) => {
+        keyboard.onkeyup(code);
+        updateModifiers();
+    });
 
     machine.ui.start_update_perf();
     return machine;

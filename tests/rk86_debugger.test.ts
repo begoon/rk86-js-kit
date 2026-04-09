@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import CLI from "../src/lib/rk86_cli.ts";
+import Debugger from "../src/lib/rk86_debugger.ts";
+import type { Machine } from "../src/lib/rk86_machine.js";
 import { parseNumber } from "../src/lib/parse_number.ts";
 import { Memory } from "../src/lib/rk86_memory.js";
 
@@ -25,22 +26,22 @@ test("parseNumber", () => {
     expect(parseNumber("1.5")).toBe(1);
 });
 
-test("CLI.disasm_print", () => {
+test("Debugger.disasm_print", () => {
     const memory = new Memory(undefined);
     memory.write_raw(0x0000, 0x27); // DAA
     memory.write_raw(0x0001, 0xfe); // CPI data8
     memory.write_raw(0x0002, 0xaa); // data8 value
     memory.write_raw(0x0003, 0x76); // HLT
 
-    const cli = new CLI({ memory });
+    const dbg = new Debugger({ memory } as unknown as Machine);
 
     const output: string[] = [];
 
     const clean = (v: string) => v.replaceAll("&nbsp;", " ");
 
-    cli.put = (msg) => output.push(clean(msg).trim());
+    dbg.put = (msg) => output.push(clean(msg).trim());
 
-    cli.disasm_print(0x0000, 3, 1);
+    dbg.disasm_print(0x0000, 3, 1);
     expect(output).toEqual([
         "0000:  27     '   DAA",
         "0001: >FEAA   ..  CPI   AA",

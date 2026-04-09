@@ -1,5 +1,7 @@
+import type { Machine } from "./rk86_machine.js";
+
 export class Tape {
-    machine: any;
+    machine: Machine;
     previous_bit_ticks = 0;
     bit_started = false;
     bit_count = 0;
@@ -9,7 +11,7 @@ export class Tape {
     output_block_count = 0;
     output_timer: ReturnType<typeof setTimeout> | null = null;
 
-    constructor(machine: any) {
+    constructor(machine: Machine) {
         this.machine = machine;
     }
 

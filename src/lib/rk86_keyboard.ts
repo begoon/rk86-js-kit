@@ -1,5 +1,10 @@
 import { fromHex, hex8 } from "./hex.js";
 
+export interface KeyboardSnapshot {
+    state: string[];
+    modifiers: string;
+}
+
 export class Keyboard {
     state!: number[];
     modifiers!: number;
@@ -38,7 +43,7 @@ export class Keyboard {
         this.modifiers = 0xff;
     }
 
-    export(): { state: string[]; modifiers: string } {
+    export(): KeyboardSnapshot {
         const h8 = (n: number) => "0x" + hex8(n);
         return {
             state: this.state.map(h8),
@@ -46,7 +51,7 @@ export class Keyboard {
         };
     }
 
-    import(snapshot: { state: string[]; modifiers: string }) {
+    import(snapshot: KeyboardSnapshot) {
         this.state = snapshot.state.map(fromHex);
         this.modifiers = fromHex(snapshot.modifiers);
     }

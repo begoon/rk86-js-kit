@@ -7,12 +7,12 @@
     import { resolve } from "$app/paths";
     import { version } from "$lib/rk86_version";
     import { main as boot, type HostCallbacks } from "$lib/boot";
-    import CLI from "$lib/rk86_cli";
+    import Debugger from "$lib/rk86_debugger";
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
     import Keyboard from "./Keyboard.svelte";
     import Terminal from "./Terminal.svelte";
-    import { ui } from "./ui_state.svelte";
+    import { ui } from "./state.svelte";
     import Visualizer from "./Visualizer.svelte";
 
     let keyboardVisible = $state(false);
@@ -61,7 +61,7 @@
                 disassemblerRef?.goCodePC();
             };
             machine = m;
-            cli = new CLI(machine);
+            dbg = new Debugger(machine);
             window.machine = machine;
         });
     });
@@ -163,7 +163,7 @@
 
     let terminal = $state<Terminal>();
 
-    let cli: CLI;
+    let dbg: Debugger;
 
     let soundEnabled = $state(false);
     let soundImageVisible = $state(false);
@@ -351,7 +351,7 @@
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="debugger-terminal" onclick={() => { canvasFocused = false; terminal?.focus(); }}>
-                <Terminal bind:this={terminal} onrun={(cmd) => cli?.run(cmd)} />
+                <Terminal bind:this={terminal} onrun={(cmd) => dbg?.run(cmd)} />
             </div>
         </div>
     {:else if assemblerVisible}

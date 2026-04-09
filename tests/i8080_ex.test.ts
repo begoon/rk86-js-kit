@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { executor } from "../test_executor.ts";
+import { executor } from "../test/test_executor.ts";
 
 describe.each([
     {

@@ -10,7 +10,7 @@
         initialDataAddr = "0000",
         ondatachange,
     }: {
-        memory: any;
+        memory: import("$lib/rk86_memory").Memory;
         cpu: I8080;
         pc: () => number;
         initialDataAddr?: string;
@@ -127,11 +127,14 @@
         const a = r[7];
         const f = cpu.store_flags();
         const flagDef = "SZ_H_P_C"; // _ = unused/hardcoded bit
-        const flags = flagDef.split("").map((ch, i) => {
-            const bit = (f >> (7 - i)) & 1;
-            if (ch === "_") return `<span class="flag-unused">${bit}</span>`;
-            return bit ? `<span class="flag-set">${ch}</span>` : `<span class="flag-unset">-</span>`;
-        }).join("");
+        const flags = flagDef
+            .split("")
+            .map((ch, i) => {
+                const bit = (f >> (7 - i)) & 1;
+                if (ch === "_") return `<span class="flag-unused">${bit}</span>`;
+                return bit ? `<span class="flag-set">${ch}</span>` : `<span class="flag-unset">-</span>`;
+            })
+            .join("");
 
         const pair = (name: string, val: number) =>
             `${name}:<span class="reg-link" data-regaddr="${hex16(val)}">${hex16(val)}</span>`;
@@ -149,15 +152,16 @@
             stackHtml += `<span class="${cls}" data-regaddr="${hex16(word)}">${hex8(lo)}&nbsp;${hex8(hi)}</span> `;
         }
 
-        regsHtml = [
-            `A:${hex8(a)}`,
-            `F:${flags}`,
-            pair("BC", bc),
-            pair("DE", de),
-            pair("HL", hl),
-            `SP:<span class="reg-link flag-set" data-regaddr="${hex16(cpu.sp)}">${hex16(cpu.sp)}</span>`,
-            pair("PC", cpu.pc),
-        ].join(" ") + `<br/><span class="registers-stack">${stackHtml}</span>`;
+        regsHtml =
+            [
+                `A:${hex8(a)}`,
+                `F:${flags}`,
+                pair("BC", bc),
+                pair("DE", de),
+                pair("HL", hl),
+                `SP:<span class="reg-link flag-set" data-regaddr="${hex16(cpu.sp)}">${hex16(cpu.sp)}</span>`,
+                pair("PC", cpu.pc),
+            ].join(" ") + `<br/><span class="registers-stack">${stackHtml}</span>`;
     }
 
     function handleRegClick(e: MouseEvent) {
@@ -229,11 +233,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-    class="disasm"
-    onkeydown={(e) => e.stopPropagation()}
-    onkeyup={(e) => e.stopPropagation()}
->
+<div class="disasm" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
     <div class="toolbar">
         <button type="button" onclick={() => codeShift(-1)}>«</button>
         <button type="button" onclick={() => codeShift(-1, true)}>‹</button>
@@ -241,7 +241,7 @@
             type="text"
             bind:value={codeAddr}
             style="width: calc(4ch + 4px)"
-            onchange={renderCode}
+            onchange={() => renderCode()}
             onkeydown={(e) => {
                 if (e.key === "Enter") renderCode();
             }}
@@ -251,12 +251,12 @@
             type="number"
             bind:value={codeLines}
             style="width: calc(5ch + 4px)"
-            onchange={renderCode}
+            onchange={() => renderCode()}
             onkeydown={(e) => {
                 if (e.key === "Enter") renderCode();
             }}
         />
-        <button type="button" onclick={renderCode} data-text="Перейти по адресу">▶</button>
+        <button type="button" onclick={() => renderCode()} data-text="Перейти по адресу">▶</button>
         <button type="button" onclick={() => codeShift(1, true)}>›</button>
         <button type="button" onclick={() => codeShift(1)}>»</button>
         <button
@@ -283,7 +283,7 @@
             type="text"
             bind:value={dataAddr}
             style="width: calc(4ch + 4px)"
-            onchange={renderData}
+            onchange={() => renderData()}
             onkeydown={(e) => {
                 if (e.key === "Enter") renderData();
             }}
@@ -293,12 +293,12 @@
             type="number"
             bind:value={dataLines}
             style="width: calc(5ch + 4px)"
-            onchange={renderData}
+            onchange={() => renderData()}
             onkeydown={(e) => {
                 if (e.key === "Enter") renderData();
             }}
         />
-        <button type="button" onclick={renderData} data-text="Перейти по адресу">▶</button>
+        <button type="button" onclick={() => renderData()} data-text="Перейти по адресу">▶</button>
         <button type="button" onclick={() => dataShift(1, true)}>›</button>
         <button type="button" onclick={() => dataShift(1)}>»</button>
     </div>

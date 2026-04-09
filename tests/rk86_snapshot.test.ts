@@ -14,8 +14,6 @@ globalThis.Image = function () {} as any;
 
 const version = "0.0.0";
 
-const snapshot_standard = new URL("snapshot.json", import.meta.url).pathname;
-
 let machine: Machine;
 
 const memory = {
@@ -67,7 +65,7 @@ function create_keyboard() {
 }
 
 function create_memory() {
-    const memory = new Memory({});
+    const memory = new Memory({} as unknown as Machine);
     memory.vg75_c001_00_cmd = 1;
     memory.video_screen_size_x_buf = 2;
     memory.video_screen_size_y_buf = 3;
@@ -93,7 +91,7 @@ function create_memory() {
 }
 
 function create_screen() {
-    const screen = new Screen({});
+    const screen = new Screen({} as unknown as Machine);
     screen.scale_x = 1;
     screen.scale_y = 2;
     screen.width = 3;
@@ -161,9 +159,8 @@ test.each([
 ])("restore from %s", (type, snapshot) => {
     expect.assertions(51);
 
+    const origLog = console.log;
     console.log = (str) => expect(str).toBe("установлен размер экрана: 3 x 4");
-
-    if (!machine) throw new Error("machine is not defined");
 
     machine.ui.update_screen_geometry = (width, height) => expect([width, height]).toEqual([3, 4]);
     machine.ui.resize_canvas = (width, height) => expect([width, height]).toEqual([18, 80]);
@@ -222,6 +219,8 @@ test.each([
     expect(machine.screen.light_pen_x).toBe(8);
     expect(machine.screen.light_pen_y).toBe(9);
     expect(machine.screen.light_pen_active).toBe(1);
+
+    console.log = origLog;
 });
 
 test("restore failure", () => {

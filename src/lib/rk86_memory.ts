@@ -52,7 +52,7 @@ export class Memory {
     last_access_address: number = 0;
     last_access_operation: string | undefined = undefined;
 
-    constructor(machine: any) {
+    constructor(machine: Machine) {
         this.machine = machine;
 
         this.init();

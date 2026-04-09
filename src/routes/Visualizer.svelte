@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ui } from "./ui_state.svelte";
+    import { ui } from "./state.svelte";
 
     let { onclose }: { onclose: () => void } = $props();
 

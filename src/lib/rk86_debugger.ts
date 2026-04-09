@@ -1,6 +1,8 @@
 import "./format.js";
 import { hex16 } from "./hex.js";
 import { i8080_opcode } from "./i8080_disasm.js";
+import type { I8080 } from "./i8080.js";
+import type { Machine } from "./rk86_machine.js";
 import { rk86_check_sum } from "./rk86_check_sum.js";
 import { saveAs } from "./saver.js";
 
@@ -15,7 +17,7 @@ interface Breakpoint {
 
 import { parseNumber } from "./parse_number.js";
 
-export default class CLI {
+export default class Debugger {
     static from_rk86_table = [
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -29,7 +31,7 @@ export default class CLI {
         ["П", "Я", "Р", "С", "Т", "У", "Ж", "В", "Ь", "Ы", "З", "Ш", "Э", "Щ", "Ч", "~"],
     ].flat();
 
-    machine: any;
+    machine: Machine;
     dump_cmd_last_address: number;
     dump_cmd_last_length: number;
     download_cmd_snapshot_address: number;
@@ -40,10 +42,10 @@ export default class CLI {
     step_over_address: number;
     breaks: Record<number, Breakpoint | null>;
     commands: Record<string, [Function, string]>;
-    disasm_cmd_last_address: any;
-    disasm_cmd_last_length: any;
+    disasm_cmd_last_address = 0;
+    disasm_cmd_last_length = 16;
 
-    constructor(machine: any) {
+    constructor(machine: Machine) {
         this.machine = machine;
 
         this.dump_cmd_last_address = 0;
@@ -114,7 +116,7 @@ export default class CLI {
             for (let i = 0; i < chunk_sz; ++i) {
                 const byte = memory.read_raw(from + i);
                 bytes += "%02X ".format(byte);
-                chars += byte >= 32 && byte < 127 ? CLI.from_rk86_table[byte] : ".";
+                chars += byte >= 32 && byte < 127 ? Debugger.from_rk86_table[byte] : ".";
             }
             if (sz < WIDTH) {
                 bytes += " ".repeat((WIDTH - sz) * 3);
@@ -169,7 +171,7 @@ export default class CLI {
             for (let i = 0; i < instr.length; ++i) {
                 const byte = binary[i];
                 bytes += "%02X".format(byte);
-                chars += byte >= 32 && byte < 127 ? CLI.from_rk86_table[byte] : ".";
+                chars += byte >= 32 && byte < 127 ? Debugger.from_rk86_table[byte] : ".";
             }
             bytes += "&nbsp;".repeat((binary.length - instr.length) * 2);
             chars += "&nbsp;".repeat(binary.length - instr.length);
@@ -213,7 +215,7 @@ export default class CLI {
             for (let i = 0; i < 16; ++i) {
                 const byte = memory.read_raw(addr + i);
                 bytes += "%02X ".format(byte);
-                chars += byte >= 32 && byte < 127 ? CLI.from_rk86_table[byte] : ".";
+                chars += byte >= 32 && byte < 127 ? Debugger.from_rk86_table[byte] : ".";
             }
             this.put("%s=%04X: %s | %s".format(title, addr, bytes, chars));
         };
@@ -318,7 +320,7 @@ export default class CLI {
         this.execute_after_breakpoint = true;
     }
 
-    tracer_callback(cpu: any, when: string): void | false {
+    tracer_callback(cpu: I8080, when: string): void | false {
         // After entering into the single step mode ('s' command) we have to
         // execute one instruction (because CPU commands are executed AFTER
         // processing console commands) and then stop before the next one.
@@ -364,8 +366,8 @@ export default class CLI {
             }
             // process "read/write" breakpoints only after the current instruction.
             if (when == "after") {
-                const address = cpu.memory.last_access_address;
-                const operation = cpu.memory.last_access_operation;
+                const address = this.machine.memory.last_access_address;
+                const operation = this.machine.memory.last_access_operation;
                 if (breakpoint.address == address && breakpoint.type == operation) {
                     breakpoint_hit(breakpoint, Number(i));
                 }
@@ -381,8 +383,7 @@ export default class CLI {
             if (state == "on") {
                 this.put("Трассировка включена");
                 runner.tracer = (when: string) => {
-                    const { cpu } = this.machine.runner;
-                    return this.tracer_callback(cpu, when);
+                    return this.tracer_callback(this.machine.cpu, when);
                 };
             } else {
                 runner.tracer = null;

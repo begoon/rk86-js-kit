@@ -45,6 +45,21 @@ interface I8080Machine {
     };
 }
 
+export interface I8080Snapshot {
+    a: string;
+    sf: number;
+    zf: number;
+    hf: number;
+    pf: number;
+    cf: number;
+    bc: string;
+    de: string;
+    hl: string;
+    sp: string;
+    pc: string;
+    iff: number;
+}
+
 export class I8080 {
     memory: I8080Machine["memory"];
     io: I8080Machine["io"];
@@ -99,7 +114,7 @@ export class I8080 {
         this.io = machine.io;
     }
 
-    export(): Record<string, string | number> {
+    export(): I8080Snapshot {
         const h8 = (n: number) => "0x" + hex8(n);
         const h16 = (n: number) => "0x" + hex16(n);
         return {
@@ -118,7 +133,7 @@ export class I8080 {
         };
     }
 
-    import(snapshot: any) {
+    import(snapshot: I8080Snapshot) {
         const h = fromHex;
         this.set_a(h(snapshot.a));
         this.sf = snapshot.sf;

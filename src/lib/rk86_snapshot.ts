@@ -1,4 +1,5 @@
 import { hex16 } from "./hex.js";
+import type { SequenceAction } from "./rk86_keyboard_injector.js";
 import { type Machine } from "./rk86_machine.js";
 
 export function rk86_snapshot(machine: Machine, version: string): string {
@@ -26,7 +27,7 @@ export function rk86_snapshot(machine: Machine, version: string): string {
 export function rk86_snapshot_restore(
     snapshot: string | Record<string, any>,
     machine?: Machine | undefined,
-    keys_injector?: (commands: any[]) => void,
+    keys_injector?: (commands: SequenceAction[]) => void,
 ): boolean {
     try {
         const json = typeof snapshot === "string" ? JSON.parse(snapshot) : snapshot;

@@ -1,5 +1,5 @@
+import type { IO } from "../../test/test_machine.js";
 import type { UI } from "./boot.js";
-import type { IO } from "../../test_machine.js";
 import type { I8080 } from "./i8080.ts";
 import type { Keyboard } from "./rk86_keyboard.ts";
 import type { Memory } from "./rk86_memory.js";
@@ -26,14 +26,4 @@ export interface Machine {
     uploadFile: (file: File) => Promise<void>;
 }
 
-export interface MachineBuilder {
-    ui?: UI;
-    cpu?: I8080;
-    memory?: Memory;
-    io: IO;
-    keyboard: Keyboard;
-    runner?: Runner;
-    screen?: Screen;
-    tape?: Tape;
-    font: string;
-}
+export type MachineBuilder = Partial<Machine>;

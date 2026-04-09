@@ -17,17 +17,16 @@ const io = {
     interrupt: (_iff: number): void => {},
 };
 
-const fakeCtx = {
-    imageSmoothingEnabled: true,
-    fillStyle: "",
-    fillRect() {},
-    drawImage() {},
-    clearRect() {},
-};
-
-const fakeCanvas = { getContext: () => fakeCtx, width: 0, height: 0 };
-
 function createMachine(): Machine {
+    const fakeCtx = {
+        imageSmoothingEnabled: true,
+        fillStyle: "",
+        fillRect() {},
+        drawImage() {},
+        clearRect() {},
+    };
+    const fakeCanvas = { getContext: () => fakeCtx, width: 0, height: 0 };
+
     const keyboard = new Keyboard();
     const ui = {
         canvas: fakeCanvas,

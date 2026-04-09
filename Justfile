@@ -15,13 +15,13 @@ test-js:
     bun test --only-failures 
 
 test-i8080:
-    bun i8080_ex.ts
+    bun test/i8080_ex.ts
 
 test-ex1-bun:
-    bun i8080_ex.ts --ex1 --verbose
+    bun test/i8080_ex.ts --ex1 --verbose
 
 test-ex1-node:
-    bunx tsx --experimental-strip-types --experimental-transform-types i8080_ex.ts --ex1 --verbose
+    bunx tsx test/i8080_ex.ts --ex1 --verbose
 
 test-ci: test-js test-ex1-bun
 

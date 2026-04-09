@@ -26,7 +26,11 @@
 		"src/**/*.ts",
 		"src/**/*.svelte",
 		"tests/**/*.ts",
-		"*.ts",
-		"tools/**/*.ts"
+		"tools/**/*.ts",
+		"test/test_console_tracer.ts",
+		"test/test_executor.ts",
+		"test/test_load_file.ts",
+		"test/test_machine.ts",
+		"test/i8080_ex.ts",
 	]
 }
