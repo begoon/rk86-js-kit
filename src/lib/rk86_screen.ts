@@ -18,7 +18,7 @@ export interface ScreenSnapshot {
 }
 
 export class Screen {
-    static #update_rate = 25;
+    static #update_rate = 40; // 25fps
 
     machine: Machine;
     cursor_rate: number;
