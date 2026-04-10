@@ -41,7 +41,10 @@ build-terminal:
     chmod +x packages/rk86/rk86.js
     rm -f packages/rk86/rk86 packages/rk86/rk86.ts
 
-publish-terminal: build-terminal
+bump-terminal:
+    cd packages/rk86 && npm version patch
+
+publish-terminal: build-terminal bump-terminal
     cd packages/rk86 && npm publish
 
 terminal *args='':

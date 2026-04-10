@@ -3,6 +3,8 @@
 
 globalThis.Image = class {} as any;
 
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { I8080 } from "./i8080.js";
 import * as FileParser from "./rk86_file_parser.js";
 import { rk86_font_image } from "./rk86_font.js";
@@ -404,13 +406,13 @@ function decodeMon32(): number[] {
 
 // --- File loading ---
 
-async function fetchFile(name: string): Promise<number[] | undefined> {
-    try {
-        const data = await Bun.file(name).arrayBuffer();
-        return Array.from(new Uint8Array(data));
-    } catch {
-        console.error(`ошибка загрузки файла: ${name}`);
+async function fetchFile(name: string): Promise<number[]> {
+    if (!existsSync(name)) {
+        console.error(`файл не найден: ${name}`);
+        process.exit(1);
     }
+    const data = await readFile(name);
+    return Array.from(data);
 }
 
 // --- Help and file listing ---
@@ -472,7 +474,7 @@ async function main() {
     const loadOnly = args.includes("-p");
     const monitorIdx = args.indexOf("-m");
     const monitorFile_ = monitorIdx >= 0 ? args[monitorIdx + 1] : undefined;
-    const positional = args.filter((a, i) => !a.startsWith("-") && i !== monitorIdx + 1);
+    const positional = args.filter((a, i) => !a.startsWith("-") && (monitorIdx < 0 || i !== monitorIdx + 1));
     const programFile = positional[0];
 
     const keyboard = new Keyboard();
@@ -495,17 +497,7 @@ async function main() {
     machine.memory.update_ruslat = machine.ui.update_ruslat;
 
     // Load monitor ROM (external or embedded)
-    let monitorContent: number[];
-    if (monitorFile_) {
-        const content = await fetchFile(monitorFile_);
-        if (!content) {
-            console.error(`монитор не найден: ${monitorFile_}`);
-            process.exit(1);
-        }
-        monitorContent = content;
-    } else {
-        monitorContent = decodeMon32();
-    }
+    const monitorContent = monitorFile_ ? await fetchFile(monitorFile_) : decodeMon32();
     const monitorFile = FileParser.parse_rk86_binary(monitorFile_ || "mon32.bin", monitorContent);
     machine.memory.load_file(monitorFile);
 
@@ -513,10 +505,6 @@ async function main() {
     let entryPoint: number | undefined;
     if (programFile) {
         const content = await fetchFile(programFile);
-        if (!content) {
-            console.error(`файл не найден: ${programFile}`);
-            process.exit(1);
-        }
         const file = FileParser.parse_rk86_binary(programFile, content);
         machine.memory.load_file(file);
         entryPoint = file.entry;

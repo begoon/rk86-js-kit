@@ -1587,6 +1587,10 @@ var init_catalog_data = __esm(() => {
   ];
 });
 
+// src/lib/rk86_terminal.ts
+import { existsSync } from "fs";
+import { readFile } from "fs/promises";
+
 // src/lib/hex.ts
 function hex(v, prefix) {
   return v.toString(16).toUpperCase();
@@ -3700,12 +3704,12 @@ function decodeMon32() {
   return Array.from(new Uint8Array(Uint8Array.from(atob(MON32_B64), (c) => c.charCodeAt(0))));
 }
 async function fetchFile(name) {
-  try {
-    const data = await Bun.file(name).arrayBuffer();
-    return Array.from(new Uint8Array(data));
-  } catch {
-    console.error(`\u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u0444\u0430\u0439\u043B\u0430: ${name}`);
+  if (!existsSync(name)) {
+    console.error(`\u0444\u0430\u0439\u043B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D: ${name}`);
+    process.exit(1);
   }
+  const data = await readFile(name);
+  return Array.from(data);
 }
 function printHelp() {
   console.log(`\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (\u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B)
@@ -3752,7 +3756,7 @@ async function main() {
   const loadOnly = args.includes("-p");
   const monitorIdx = args.indexOf("-m");
   const monitorFile_ = monitorIdx >= 0 ? args[monitorIdx + 1] : undefined;
-  const positional = args.filter((a, i) => !a.startsWith("-") && i !== monitorIdx + 1);
+  const positional = args.filter((a, i) => !a.startsWith("-") && (monitorIdx < 0 || i !== monitorIdx + 1));
   const programFile = positional[0];
   const keyboard = new Keyboard;
   const io = new IO;
@@ -3769,26 +3773,12 @@ async function main() {
   machine.tape = new Tape(machine);
   machine.runner = new Runner(machine);
   machine.memory.update_ruslat = machine.ui.update_ruslat;
-  let monitorContent;
-  if (monitorFile_) {
-    const content = await fetchFile(monitorFile_);
-    if (!content) {
-      console.error(`\u043C\u043E\u043D\u0438\u0442\u043E\u0440 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D: ${monitorFile_}`);
-      process.exit(1);
-    }
-    monitorContent = content;
-  } else {
-    monitorContent = decodeMon32();
-  }
+  const monitorContent = monitorFile_ ? await fetchFile(monitorFile_) : decodeMon32();
   const monitorFile = parse_rk86_binary(monitorFile_ || "mon32.bin", monitorContent);
   machine.memory.load_file(monitorFile);
   let entryPoint;
   if (programFile) {
     const content = await fetchFile(programFile);
-    if (!content) {
-      console.error(`\u0444\u0430\u0439\u043B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D: ${programFile}`);
-      process.exit(1);
-    }
     const file = parse_rk86_binary(programFile, content);
     machine.memory.load_file(file);
     entryPoint = file.entry;
