@@ -123,6 +123,26 @@ Monitor sets SP to 76CFh (just below video memory at 76D0h).
 Stack grows downward into 7660h-76CEh area.
 User programs should use the same stack or set SP to a safe address below 7600h.
 
+## Character Set
+
+0x00-0x7F base characters. 0x80-0xFF are inverse video copies of 0x00-0x7F.
+
+|      | 0   | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   | A   | B   | C   | D   | E   | F   |
+|------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| 0x0_ |     | ▘   | ▝   | ▀   | ▗   | ▚   | ▐   | ▜   |     | ✿   |     | ↑   |     |     | ◀   | ▼   |
+| 0x1_ | ▖   | ▌   | ▞   | ▛   | ▄   | ▙   | ▟   | █   |     |     |     | │   | ─   | ▶   | ⌐   |     |
+| 0x2_ |     | !   | "   | #   | $   | %   | &   | '   | (   | )   | *   | +   | ,   | -   | .   | /   |
+| 0x3_ | 0   | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   | :   | ;   | <   | =   | >   | ?   |
+| 0x4_ | @   | A   | B   | C   | D   | E   | F   | G   | H   | I   | J   | K   | L   | M   | N   | O   |
+| 0x5_ | P   | Q   | R   | S   | T   | U   | V   | W   | X   | Y   | Z   | [   | \   | ]   | ^   | _   |
+| 0x6_ | Ю   | А   | Б   | Ц   | Д   | Е   | Ф   | Г   | Х   | И   | Й   | К   | Л   | М   | Н   | О   |
+| 0x7_ | П   | Я   | Р   | С   | Т   | У   | Ж   | В   | Ь   | Ы   | З   | Ш   | Э   | Щ   | Ч   | █   |
+
+- 0x00-0x1F: block graphics and arrows (empty cells render as space)
+- 0x20-0x3F: ASCII punctuation and digits
+- 0x40-0x5F: ASCII uppercase Latin and symbols
+- 0x60-0x7F: Russian uppercase (KOI-7 layout), 0x7F = full block
+
 ## Newline
 
 Newline is CR+LF: 0Dh, 0Ah (two bytes in strings for puts).
