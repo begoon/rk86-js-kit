@@ -111,6 +111,12 @@ Row 0 contains F1-F5 and other function keys.
 | F830h   | getlim   | —                                   | HL = memory limit                   | Get top of user RAM                  |
 | F833h   | setlim   | HL = memory limit                   | —                                   | Set top of user RAM                  |
 
+### Other Useful Addresses
+
+| Address | Name        | Description                                                        |
+|---------|-------------|--------------------------------------------------------------------|
+| F86Ch   | prompt_loop | Warm restart — return to monitor prompt without reinitializing HW  |
+
 ## Stack
 
 Monitor sets SP to 76CFh (just below video memory at 76D0h).
