@@ -5,6 +5,8 @@ test: test-js test-i8080
 build:
     bun run build
 
+#
+
 lint:
     bunx eslint *.ts
 
@@ -25,6 +27,8 @@ test-ex1-node:
 
 test-ci: test-js test-ex1-bun
 
+#
+
 release-alpha:
     BASE_PATH=/alpha bun run build 
     cp -R ./build/* ../rk86-js/docs/alpha/ 
@@ -35,17 +39,32 @@ release-beta:
 
 release: release-beta release-alpha
 
-build-terminal:
-    bun build src/lib/rk86_terminal.ts --outfile ./rk86.ts --target=bun
+#
+
+terminal-run *args='':
+    bun src/lib/terminal/rk86_terminal.ts {{ args }} --exit-address rrr0
+
+terminal-build:
+    bun build src/lib/terminal/rk86_terminal.ts --outfile ./rk86.ts --target=bun
     echo '#!/usr/bin/env bun' | cat - ./rk86.ts > packages/rk86/rk86.js
     chmod +x packages/rk86/rk86.js
     rm -f packages/rk86/rk86 packages/rk86/rk86.ts
 
-bump-terminal:
+terminal-bump:
     cd packages/rk86 && npm version patch
 
-publish-terminal: build-terminal bump-terminal
+terminal-publish: terminal-build terminal-bump
     cd packages/rk86 && npm publish
 
-terminal *args='':
-    bun src/lib/rk86_terminal.ts {{args}}
+#
+
+build-asm: build-claude build-exiter build-pong
+
+build-claude:
+    bunx asm8080 info/asm/claude.asm -o info/asm --split
+
+build-exiter:
+    bunx asm8080 info/asm/exiter.asm -o info/asm --split
+
+build-pong:
+    bunx asm8080 info/asm/pong.asm -o info/asm --split

@@ -1,9 +1,7 @@
-import type { Machine } from "./rk86_machine.js";
+import type { Machine } from "../core/rk86_machine.js";
+import type { Renderer } from "../core/rk86_renderer_interface.js";
 
-export interface Renderer {
-    connect(machine: Machine): void;
-    update(): void;
-}
+export type { Renderer };
 
 const CHAR_WIDTH = 6;
 const CHAR_HEIGHT = 8;

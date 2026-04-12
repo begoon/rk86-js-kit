@@ -2,19 +2,19 @@
 // Usage: <radio86-emulator monitor="mon32.bin" file="CHESS.GAM"></radio86-emulator>
 // Default: 1:1 pixel scale. Use scale="auto" for browser-scaled rendering.
 
-import { I8080 } from "./i8080.js";
-import { Keyboard } from "./rk86_keyboard.js";
-import { rk86_font_image } from "./rk86_font.js";
-import * as FileParser from "./rk86_file_parser.js";
-import { Memory } from "./rk86_memory.js";
-import { CanvasRenderer } from "./rk86_renderer.js";
-import { Runner } from "./rk86_runner.js";
-import { Screen } from "./rk86_screen.js";
-import { Tape } from "./rk86_tape.js";
-import { rk86_snapshot_restore } from "./rk86_snapshot.js";
-import { convert_keyboard_sequence } from "./rk86_keyboard_injector.js";
-import type { SequenceAction } from "./rk86_keyboard_injector.js";
-import type { Machine, MachineBuilder } from "./rk86_machine.js";
+import { I8080 } from "../core/i8080.js";
+import * as FileParser from "../core/rk86_file_parser.js";
+import { rk86_font_image } from "../core/rk86_font.js";
+import { Keyboard } from "../core/rk86_keyboard.js";
+import type { SequenceAction } from "../core/rk86_keyboard_injector.js";
+import { convert_keyboard_sequence } from "../core/rk86_keyboard_injector.js";
+import type { Machine, MachineBuilder } from "../core/rk86_machine.js";
+import { Memory } from "../core/rk86_memory.js";
+import { Runner } from "../core/rk86_runner.js";
+import { Screen } from "../core/rk86_screen.js";
+import { rk86_snapshot_restore } from "../core/rk86_snapshot.js";
+import { CanvasRenderer } from "../web/renderer.js";
+import { Tape } from "../web/tape.js";
 
 class MinimalUI {
     canvas: HTMLCanvasElement;

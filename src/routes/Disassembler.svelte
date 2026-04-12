@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { i8080_opcode } from "$lib/i8080_disasm";
+    import { i8080_opcode } from "$lib/core/i8080_disasm";
 
-    import type { I8080 } from "$lib/i8080";
+    import type { I8080 } from "$lib/core/i8080";
 
     let {
         memory,

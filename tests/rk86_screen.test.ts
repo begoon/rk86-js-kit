@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "bun:test";
 
-import { Screen } from "../src/lib/rk86_screen.js";
+import { Screen } from "../src/lib/core/rk86_screen.js";
 
 let screen: Screen;
 

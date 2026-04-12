@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { i8080_opcode } from "../src/lib/i8080_disasm.js";
+import { i8080_opcode } from "../src/lib/core/i8080_disasm.js";
 
 test("i8080_opcode", () => {
     expect(i8080_opcode(0x00)).toEqual({

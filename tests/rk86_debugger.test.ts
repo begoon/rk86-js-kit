@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import Debugger from "../src/lib/rk86_debugger.ts";
-import type { Machine } from "../src/lib/rk86_machine.js";
-import { parseNumber } from "../src/lib/parse_number.ts";
-import { Memory } from "../src/lib/rk86_memory.js";
+import Debugger from "../src/lib/core/rk86_debugger.ts";
+import type { Machine } from "../src/lib/core/rk86_machine.js";
+import { parseNumber } from "../src/lib/core/parse_number.ts";
+import { Memory } from "../src/lib/core/rk86_memory.js";
 
 test("parseNumber", () => {
     expect(parseNumber("")).toBe(NaN);

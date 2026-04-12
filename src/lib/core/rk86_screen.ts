@@ -1,6 +1,6 @@
 import { fromHex, hex16 } from "./hex.js";
 import type { Machine } from "./rk86_machine.js";
-import type { Renderer } from "./rk86_renderer.js";
+import type { Renderer } from "./rk86_renderer_interface.js";
 
 export interface ScreenSnapshot {
     scale_x: number;
@@ -34,6 +34,7 @@ export class Screen {
     light_pen_active: number;
     video_memory_base = 0;
     video_memory_size = 0;
+    ready = false;
 
     private renderer!: Renderer;
 
@@ -104,12 +105,12 @@ export class Screen {
     }
 
     private render_loop() {
-        this.renderer.update();
+        if (this.ready) this.renderer.update();
         setTimeout(() => this.render_loop(), Screen.#update_rate);
     }
 
-    private last_width = 0;
-    private last_height = 0;
+    private last_width = -1;
+    private last_height = -1;
 
     set_geometry(width: number, height: number): void {
         this.width = width;
@@ -123,9 +124,10 @@ export class Screen {
         console.log(`установлен размер экрана: ${width} x ${height}`);
         this.last_width = this.width;
         this.last_height = this.height;
+        if (this.last_video_memory_base !== -1) this.ready = true;
     }
 
-    private last_video_memory_base = 0;
+    private last_video_memory_base = -1;
 
     set_video_memory(base: number): void {
         this.video_memory_base = base;
@@ -140,6 +142,7 @@ export class Screen {
             `размером ${hex16(this.video_memory_size)}`,
         );
         this.last_video_memory_base = this.video_memory_base;
+        if (this.last_width !== -1) this.ready = true;
     }
 
     set_cursor(x: number, y: number): void {

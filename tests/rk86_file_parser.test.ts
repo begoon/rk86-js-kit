@@ -7,7 +7,7 @@ import {
     is_hex_file,
     parse,
     parse_rk86_binary,
-} from "../src/lib/rk86_file_parser.js";
+} from "../src/lib/core/rk86_file_parser.js";
 
 test("extract_rk86_word", () => {
     expect(extract_rk86_word([0x11, 0x22, 0x33], 1)).toBe(0x2233);

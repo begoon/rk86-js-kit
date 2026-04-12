@@ -1,6 +1,7 @@
-import type { Machine } from "./rk86_machine.js";
+import type { Machine } from "../core/rk86_machine.js";
+import type { TapeInterface } from "../core/rk86_tape_interface.js";
 
-export class Tape {
+export class Tape implements TapeInterface {
     machine: Machine;
     previous_bit_ticks = 0;
     bit_started = false;
@@ -28,7 +29,7 @@ export class Tape {
             const line = bytes.slice(i, i + 16);
             console.log(
                 i.toString(16).padStart(4, "0").toUpperCase() + ":",
-                line.map((byte) => byte.toString(16).padStart(2, "0")).join(" ")
+                line.map((byte) => byte.toString(16).padStart(2, "0")).join(" "),
             );
         }
     }

@@ -1,9 +1,9 @@
 // Generates test data tables for i8080 ALU and single-operand instructions.
 // Run: bun tests/generate_cpu_data.ts
 
-import { I8080 } from "../src/lib/i8080.ts";
-import { Memory } from "../src/lib/rk86_memory.js";
-import { hex8, hex16 } from "../src/lib/hex.js";
+import { I8080 } from "../src/lib/core/i8080.ts";
+import { Memory } from "../src/lib/core/rk86_memory.js";
+import { hex8, hex16 } from "../src/lib/core/hex.js";
 
 async function writeData(name: string, varName: string, results: string[]) {
     await Bun.write(

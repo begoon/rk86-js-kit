@@ -1,8 +1,8 @@
 import { beforeEach, expect, test } from "bun:test";
 
-import { I8080 } from "../src/lib/i8080.ts";
-import { hex8, hex16 } from "../src/lib/hex.js";
-import { Memory } from "../src/lib/rk86_memory.js";
+import { I8080 } from "../src/lib/core/i8080.ts";
+import { hex8, hex16 } from "../src/lib/core/hex.js";
+import { Memory } from "../src/lib/core/rk86_memory.js";
 
 import { ADI } from "./cpu/adi_data.ts";
 import { ACI } from "./cpu/aci_data.ts";

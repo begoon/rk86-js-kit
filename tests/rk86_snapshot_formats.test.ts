@@ -2,12 +2,12 @@ import { expect, test } from "bun:test";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 
-import { I8080 } from "../src/lib/i8080.ts";
-import { Keyboard } from "../src/lib/rk86_keyboard.ts";
-import type { Machine } from "../src/lib/rk86_machine.js";
-import { Memory } from "../src/lib/rk86_memory.js";
-import { Screen } from "../src/lib/rk86_screen.js";
-import { rk86_snapshot_restore } from "../src/lib/rk86_snapshot.js";
+import { I8080 } from "../src/lib/core/i8080.ts";
+import { Keyboard } from "../src/lib/core/rk86_keyboard.ts";
+import type { Machine } from "../src/lib/core/rk86_machine.js";
+import { Memory } from "../src/lib/core/rk86_memory.js";
+import { Screen } from "../src/lib/core/rk86_screen.js";
+import { rk86_snapshot_restore } from "../src/lib/core/rk86_snapshot.js";
 
 const io = {
     input: (_port: number): number => 0,

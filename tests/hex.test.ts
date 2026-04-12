@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fromHex, hex16, hex8, hexArray } from "../src/lib/hex.js";
+import { fromHex, hex16, hex8, hexArray } from "../src/lib/core/hex.js";
 
 test("hex8", () => {
     expect(hex8(0)).toBe("00");

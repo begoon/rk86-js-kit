@@ -2,18 +2,20 @@
 // Usage: bun src/lib/rk86_terminal.ts [program.GAM]
 
 import { existsSync } from "node:fs";
+import pkg from "../../../packages/rk86/package.json";
 import { readFile } from "node:fs/promises";
-import { I8080 } from "./i8080.js";
-import * as FileParser from "./rk86_file_parser.js";
-import { rk86_font_image } from "./rk86_font.js";
-import { Keyboard } from "./rk86_keyboard.js";
-import type { Machine, MachineBuilder } from "./rk86_machine.js";
-import { Memory } from "./rk86_memory.js";
-import type { Renderer } from "./rk86_renderer.js";
-import { Runner } from "./rk86_runner.js";
-import { Screen } from "./rk86_screen.js";
-import { rk86_snapshot_restore } from "./rk86_snapshot.js";
-import { Tape } from "./rk86_tape.js";
+import { hex16 } from "../core/hex.js";
+import { I8080 } from "../core/i8080.js";
+import * as FileParser from "../core/rk86_file_parser.js";
+import { rk86_font_image } from "../core/rk86_font.js";
+import { Keyboard } from "../core/rk86_keyboard.js";
+import type { Machine, MachineBuilder } from "../core/rk86_machine.js";
+import { Memory } from "../core/rk86_memory.js";
+import type { Renderer } from "../core/rk86_renderer_interface.js";
+import { Runner } from "../core/rk86_runner.js";
+import { Screen } from "../core/rk86_screen.js";
+import { rk86_snapshot_restore } from "../core/rk86_snapshot.js";
+import { Tape } from "../web/tape.js";
 
 // --- RK86 byte → Unicode character mapping ---
 // Built from rk86_font.bmp analysis.
@@ -202,6 +204,8 @@ class IO {
 
 class TerminalRenderer implements Renderer {
     private machine!: Machine;
+    loadInfo = "";
+    private loadInfoPrinted = false;
 
     connect(machine: Machine): void {
         this.machine = machine;
@@ -233,6 +237,11 @@ class TerminalRenderer implements Renderer {
             output += line + "\n";
         }
         output += `${dim}└${"─".repeat(w)}┘${reset}\n`;
+
+        if (this.loadInfo && !this.loadInfoPrinted && screen.video_memory_base > 0) {
+            output += this.loadInfo + "\n";
+            this.loadInfoPrinted = true;
+        }
 
         process.stdout.write(output);
     }
@@ -411,17 +420,22 @@ function printHelp() {
 Использование: bunx rk86 [опции] [файл]
 
 Опции:
-  -h              справка
-  -l              список файлов из каталога
-  -m <файл>       монитор (по умолчанию: встроенный mon32.bin)
-  -p              загрузить файл без запуска
+  -v                       версия
+  -h                       справка
+  -l                       список файлов из каталога
+  -m <файл>                монитор (по умолчанию: встроенный mon32.bin)
+  -p                       загрузить файл без запуска
+  --exit-halt              выход при выполнении HLT
+  --exit-address [адрес]   выход при переходе на адрес (по умолчанию: 0xFFFE)
 
 Примеры:
-  bunx rk86                  запуск монитора
-  bunx rk86 CHESS.GAM        загрузить и запустить файл
-  bunx rk86 -p CHESS.GAM     загрузить файл (без запуска)
-  bunx rk86 -m mon16.bin     запуск с другим монитором
-  bunx rk86 -l               список доступных файлов
+  bunx rk86                          запуск монитора
+  bunx rk86 CHESS.GAM                загрузить и запустить файл
+  bunx rk86 -p CHESS.GAM             загрузить файл (без запуска)
+  bunx rk86 -m mon16.bin             запуск с другим монитором
+  bunx rk86 --exit-halt prog.bin     выход при HLT
+  bunx rk86 --exit-address prog.bin  выход при JMP FFFEh
+  bunx rk86 -l                       список известных файлов
 
 Управление:
   Ctrl+C    выход`);
@@ -436,7 +450,7 @@ function htmlToAnsi(html: string): string {
 }
 
 async function listFiles() {
-    const { catalog } = await import("./catalog_data.js");
+    const { catalog } = await import("../catalog_data.js");
     for (const entry of catalog) {
         const title = htmlToAnsi(entry.title);
         const desc = entry.description ? ` — ${htmlToAnsi(entry.description)}` : "";
@@ -446,24 +460,58 @@ async function listFiles() {
 
 // --- Main ---
 
+function flag(args: string[], name: string): boolean {
+    const i = args.indexOf(name);
+    if (i == -1) return false;
+    args.splice(i, 1);
+    return true;
+}
+
+function arg<T>(
+    args: string[],
+    name: string,
+    defaultValue?: string,
+    matcher?: RegExp,
+    convertor?: (value: string) => T,
+): string | T | undefined {
+    const convert = (v: string) => (convertor ? convertor(v) : v);
+    const i = args.indexOf(name);
+    if (i == -1) return undefined;
+    if (i + 1 >= args.length || (matcher && !matcher.test(args[i + 1]))) {
+        args.splice(i, 1);
+        return defaultValue ? convert(defaultValue) : defaultValue;
+    }
+    const value = args[i + 1];
+    args.splice(i, 2);
+    return convert(value);
+}
+
 async function main() {
     const args = process.argv.slice(2);
 
-    if (args.includes("-h") || args.includes("--help")) {
+    if (flag(args, "-v") || flag(args, "--version")) {
+        console.log(`rk86 ${pkg.version}`);
+        process.exit(0);
+    }
+
+    if (flag(args, "-h") || flag(args, "--help")) {
         printHelp();
         process.exit(0);
     }
 
-    if (args.includes("-l") || args.includes("--list")) {
+    if (flag(args, "-l") || flag(args, "--list")) {
         await listFiles();
         process.exit(0);
     }
 
-    const loadOnly = args.includes("-p");
-    const monitorIdx = args.indexOf("-m");
-    const monitorFile_ = monitorIdx >= 0 ? args[monitorIdx + 1] : undefined;
-    const positional = args.filter((a, i) => !a.startsWith("-") && (monitorIdx < 0 || i !== monitorIdx + 1));
-    const programFile = positional[0];
+    const loadOnly = flag(args, "-p");
+    const exitOnHalt = flag(args, "--exit-halt");
+    const exitAddrValue = arg(args, "--exit-address", "0xFFFE", /^0x[0-9a-fA-F]+$/i, (v) => parseInt(v, 16)) as
+        | number
+        | undefined;
+    const exitAddr = exitAddrValue !== undefined;
+    const monitorFile_ = arg(args, "-m") as string | undefined;
+    const programFile = args[0];
 
     const keyboard = new Keyboard();
     const io = new IO();
@@ -491,20 +539,19 @@ async function main() {
 
     // Load program if specified
     let entryPoint: number | undefined;
+    let loadInfo = "";
     if (programFile) {
         const content = await fetchFile(programFile);
         const { ok, json } = FileParser.parse(content);
         if (ok) {
             rk86_snapshot_restore(json, machine);
             entryPoint = parseInt(json.cpu.pc);
-            console.error(`загружен образ: ${programFile} (PC=${entryPoint.toString(16)})`);
+            loadInfo = `загружен: ${programFile} (PC=${hex16(entryPoint)})`;
         } else {
             const file = FileParser.parse_rk86_binary(programFile, content);
             machine.memory.load_file(file);
             entryPoint = file.entry;
-            console.error(
-                `загружен: ${programFile} (${file.start.toString(16)}-${file.end.toString(16)}, G${file.entry.toString(16)})`,
-            );
+            loadInfo = `загружен: ${programFile}` + ` (${hex16(file.start)}-${hex16(file.end)}, G${hex16(file.entry)})`;
         }
     }
 
@@ -513,8 +560,24 @@ async function main() {
     process.stdout.write("\x1b[2J"); // clear screen
 
     setupKeyboard(keyboard);
-    machine.screen.start(new TerminalRenderer());
-    machine.runner.execute();
+    const renderer = new TerminalRenderer();
+    renderer.loadInfo = loadInfo;
+    machine.screen.start(renderer);
+    const onTerminate =
+        exitOnHalt || exitAddr
+            ? () => {
+                  renderer.update();
+                  console.log();
+                  console.log("программа завершила работу на", hex16(machine.cpu.pc));
+                  process.exit(0);
+              }
+            : undefined;
+
+    machine.runner.execute({
+        terminate_address: exitAddr ? exitAddrValue : undefined,
+        exit_on_halt: exitOnHalt,
+        on_terminate: onTerminate,
+    });
 
     // Autorun loaded file after monitor initializes
     if (entryPoint !== undefined && !loadOnly) {

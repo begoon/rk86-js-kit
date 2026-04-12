@@ -1,5 +1,11 @@
 import type { Machine } from "./rk86_machine.js";
-import { Sound } from "./rk86_sound.js";
+import type { SoundAdapter } from "./rk86_sound_interface.js";
+
+export interface ExecuteOptions {
+    terminate_address?: number;
+    on_terminate?: () => void;
+    exit_on_halt?: boolean;
+}
 
 export class Runner {
     paused = false;
@@ -9,7 +15,8 @@ export class Runner {
     total_ticks = 0;
     last_iff_raise_ticks = 0;
     last_iff = 0;
-    sound: Sound | null = null;
+    sound: SoundAdapter | null = null;
+    sound_factory?: () => SoundAdapter;
     instructions_per_millisecond = 0;
     ticks_per_millisecond = 0;
     FREQ = 1780000;
@@ -41,8 +48,8 @@ export class Runner {
     }
 
     init_sound(enabled: boolean) {
-        if (enabled && this.sound == null) {
-            this.sound = new Sound();
+        if (enabled && this.sound == null && this.sound_factory) {
+            this.sound = this.sound_factory();
             console.log("звук включен");
         } else if (!enabled) {
             this.sound = null;
@@ -50,7 +57,8 @@ export class Runner {
         }
     }
 
-    execute() {
+    execute(options: ExecuteOptions = {}) {
+        const { terminate_address, on_terminate, exit_on_halt } = options;
         clearTimeout(this.execute_timer);
         if (!this.paused) {
             let batch_ticks = 0;
@@ -77,6 +85,14 @@ export class Runner {
                     this.machine.ui.on_visualizer_hit(this.machine.memory.read_raw(this.machine.cpu.pc));
                 }
                 batch_instructions += 1;
+                if (terminate_address !== undefined && this.machine.cpu.pc === terminate_address) {
+                    on_terminate?.();
+                    return;
+                }
+                if (exit_on_halt && this.machine.memory.read_raw(this.machine.cpu.pc) === 0x76) {
+                    on_terminate?.();
+                    return;
+                }
             }
             const now = performance.now();
             const elapsed = now - this.previous_batch_time;
@@ -85,7 +101,7 @@ export class Runner {
             this.instructions_per_millisecond = batch_instructions / elapsed;
             this.ticks_per_millisecond = batch_ticks / elapsed;
         }
-        this.execute_timer = setTimeout(() => this.execute(), 10);
+        this.execute_timer = setTimeout(() => this.execute(options), 10);
     }
 
     pause() {

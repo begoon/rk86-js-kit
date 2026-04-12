@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { type Machine } from "$lib/rk86_machine";
+    import { type Machine } from "$lib/core/rk86_machine";
 
     let shortcutsDialog = $state<HTMLDialogElement>();
     let hintText = $state("");
 
     import { resolve } from "$app/paths";
     import { version } from "$lib/rk86_version";
-    import { main as boot, type HostCallbacks } from "$lib/boot";
-    import Debugger from "$lib/rk86_debugger";
+    import { main as boot, type HostCallbacks } from "$lib/web/boot";
+    import Debugger from "$lib/core/rk86_debugger";
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
     import Keyboard from "./Keyboard.svelte";

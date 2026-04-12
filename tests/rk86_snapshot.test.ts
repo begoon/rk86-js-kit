@@ -1,11 +1,11 @@
 import { beforeEach, expect, test } from "bun:test";
 
-import { I8080 } from "../src/lib/i8080.ts";
-import { Keyboard } from "../src/lib/rk86_keyboard.ts";
-import { Memory } from "../src/lib/rk86_memory.js";
-import { Screen } from "../src/lib/rk86_screen.js";
+import { I8080 } from "../src/lib/core/i8080.ts";
+import { Keyboard } from "../src/lib/core/rk86_keyboard.ts";
+import { Memory } from "../src/lib/core/rk86_memory.js";
+import { Screen } from "../src/lib/core/rk86_screen.js";
 
-import { rk86_snapshot, rk86_snapshot_restore } from "../src/lib/rk86_snapshot.js";
+import { rk86_snapshot, rk86_snapshot_restore } from "../src/lib/core/rk86_snapshot.js";
 
 const document = {};
 const window = { setTimeout() {} };
@@ -119,7 +119,7 @@ beforeEach(() => {
 
 const normalize = (v: string) => JSON.stringify(JSON.parse(v), null, 4);
 
-import { type Machine } from "../src/lib/rk86_machine.js";
+import { type Machine } from "../src/lib/core/rk86_machine.js";
 import EXPECTED_SNAPSHOT from "./test_snapshot.json" with { type: "json" };
 
 test("export", () => {

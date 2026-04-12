@@ -1,10 +1,10 @@
+import { saveAs } from "../web/saver.js";
 import "./format.js";
 import { hex16 } from "./hex.js";
-import { i8080_opcode } from "./i8080_disasm.js";
 import type { I8080 } from "./i8080.js";
-import type { Machine } from "./rk86_machine.js";
+import { i8080_opcode } from "./i8080_disasm.js";
 import { rk86_check_sum } from "./rk86_check_sum.js";
-import { saveAs } from "./saver.js";
+import type { Machine } from "./rk86_machine.js";
 
 interface Breakpoint {
     type: string;

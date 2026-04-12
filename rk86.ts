@@ -1587,11 +1587,37 @@ var init_catalog_data = __esm(() => {
   ];
 });
 
-// src/lib/rk86_terminal.ts
+// src/lib/terminal/rk86_terminal.ts
 import { existsSync } from "fs";
+// packages/rk86/package.json
+var package_default = {
+  name: "rk86",
+  version: "2.0.12",
+  description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
+  bin: {
+    rk86: "rk86.js"
+  },
+  type: "module",
+  keywords: [
+    "rk86",
+    "radio-86rk",
+    "emulator",
+    "intel-8080",
+    "i8080",
+    "retro"
+  ],
+  author: "Alexander Demin",
+  license: "MIT",
+  repository: {
+    type: "git",
+    url: "https://github.com/begoon/rk86-js-web"
+  }
+};
+
+// src/lib/terminal/rk86_terminal.ts
 import { readFile } from "fs/promises";
 
-// src/lib/hex.ts
+// src/lib/core/hex.ts
 function hex(v, prefix) {
   return v.toString(16).toUpperCase();
 }
@@ -1611,7 +1637,7 @@ function fromHex(v) {
   return v;
 }
 
-// src/lib/i8080.ts
+// src/lib/core/i8080.ts
 class I8080 {
   memory;
   io;
@@ -2461,7 +2487,7 @@ class I8080 {
   }
 }
 
-// src/lib/rk86_file_parser.ts
+// src/lib/core/rk86_file_parser.ts
 var extract_rk86_word = function(v, i) {
   return (v[i] & 255) << 8 | v[i + 1] & 255;
 };
@@ -2541,12 +2567,12 @@ function extact_metadata(text) {
   return [...text.matchAll(/!([^ =\t\n\r]+?)=([^ \t\r\n]+)/g)].map((group) => group.slice(1)).reduce((a, [key, value]) => (a[key] = value, a), initial);
 }
 
-// src/lib/rk86_font.ts
+// src/lib/core/rk86_font.ts
 function rk86_font_image() {
   return "data:image/bmp;base64," + "Qk0+IAAAAAAAAD4AAAAoAAAACAAAAAAIAAABAAEAAAAAAAAgAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAP///wAAAAAAGAAAABgAAAB+AAAAfgAAABgAAAAYAAAA" + "AAAAAAAAAAABAAAAAQAAAA8AAAAJAAAACQAAAAAAAAAAAAAAAQAAAD8AAAAq" + "AAAAKgAAACoAAAAqAAAAAAAAAAAAAAAAAAAADgAAAAEAAAAHAAAAAQAAAA4A" + "AAAAAAAAAAAAAAAAAAAfAAAAFQAAABUAAAAVAAAAFQAAAAAAAAAAAAAAAAAA" + "AA4AAAABAAAAAgAAAAkAAAAGAAAAAAAAAAAAAAAAAAAAGQAAABUAAAAZAAAA" + "EQAAABEAAAAAAAAAAAAAAAAAAAAOAAAACQAAAA4AAAAIAAAACAAAAAAAAAAA" + "AAAAAAAAAA4AAAAJAAAADgAAAAkAAAAOAAAAAAAAAAAAAAAAAAAAFQAAABUA" + "AAAOAAAAFQAAABUAAAAAAAAAAAAAAAAAAAAOAAAAAQAAAAcAAAAJAAAACQAA" + "AAAAAAAAAAAAAAAAAAQAAAAEAAAABAAAAAQAAAAfAAAAAAAAAAAAAAAAAAAA" + "BwAAAAgAAAAIAAAACAAAAAcAAAAAAAAAAAAAAAgAAAAIAAAACAAAAA4AAAAJ" + "AAAADgAAAAAAAAAAAAAAAAAAAAkAAAAFAAAABwAAAAkAAAAHAAAAAAAAAAAA" + "AAAAAAAACQAAAAkAAAAJAAAACQAAAA8AAAAAAAAAAAAAAAAAAAAGAAAACQAA" + "AAkAAAAJAAAABgAAAAAAAAAAAAAAAAAAAAkAAAAJAAAADwAAAAkAAAAJAAAA" + "AAAAAAAAAAAAAAAAEQAAABUAAAAVAAAAGwAAABEAAAAAAAAAAAAAAAAAAAAJ" + "AAAACQAAAAkAAAAFAAAAAwAAAAAAAAAAAAAAAAAAAAkAAAAKAAAADAAAAAoA" + "AAAJAAAAAAAAAAAAAAAAAAAACQAAAA0AAAALAAAACQAAAAkAAAAAAAAABgAA" + "AAAAAAAJAAAADQAAAAsAAAAJAAAACQAAAAAAAAAAAAAAAAAAAAkAAAAJAAAA" + "BgAAAAYAAAAJAAAAAAAAAAAAAAAAAAAACAAAAAgAAAAIAAAACAAAAA8AAAAA" + "AAAAAAAAAAQAAAAEAAAADgAAABUAAAAOAAAABAAAAAAAAAAAAAAAAAAAAAcA" + "AAAIAAAADgAAAAkAAAAGAAAAAAAAAAAAAAAAAAAADwAAAAEAAAAHAAAACQAA" + "AAYAAAAAAAAAAAAAAAEAAAAfAAAAEgAAABIAAAASAAAAEgAAAAAAAAAAAAAA" + "AAAAAA4AAAAJAAAADgAAAAgAAAAHAAAAAAAAAAAAAAAAAAAABgAAAAkAAAAH" + "AAAAAQAAAA4AAAAAAAAAAAAAAAAAAAASAAAAFQAAAB0AAAAVAAAAEgAAAAAA" + "AAAAAAAAAAAAAAQAAAAMAAAAHgAAAD8AAAAeAAAADAAAAAgAAAAAAAAAAQAA" + "AAMAAAAPAAAADAAAAAgAAAAAAAAAAAAAAAAAAAARAAAACAAAAAgAAAAEAAAA" + "CAAAAAgAAAAQAAAAAAAAAAgAAAAIAAAACAAAAAAAAAAIAAAACAAAAAgAAAAA" + "AAAAAQAAAAIAAAACAAAABAAAAAIAAAACAAAAAQAAAAAAAAAPAAAACAAAAAYA" + "AAABAAAADwAAAAAAAAAAAAAAAAAAAA4AAAABAAAABwAAAAkAAAAJAAAAAAAA" + "AAAAAAAAAAAAEQAAAAoAAAACAAAACgAAABEAAAAAAAAAAAAAAAAAAAAKAAAA" + "FQAAABUAAAARAAAAEQAAAAAAAAAAAAAAAAAAAAQAAAAKAAAAEQAAABEAAAAR" + "AAAAAAAAAAAAAAAAAAAADgAAABEAAAARAAAAEQAAABEAAAAAAAAAAAAAAAAA" + "AAAGAAAACQAAAAgAAAAIAAAAHAAAAAgAAAAIAAAAAAAAAA4AAAABAAAABgAA" + "AAgAAAAHAAAAAAAAAAAAAAAAAAAACAAAAAgAAAAIAAAACQAAAA4AAAAAAAAA" + "AAAAAAAAAAABAAAABwAAAAkAAAAJAAAABwAAAAAAAAAAAAAAAAAAAAgAAAAO" + "AAAACQAAAAkAAAAOAAAAAAAAAAAAAAAAAAAABgAAAAkAAAAJAAAACQAAAAYA" + "AAAAAAAAAAAAAAAAAAAJAAAACQAAAAkAAAAJAAAADgAAAAAAAAAAAAAAAAAA" + "ABUAAAAVAAAAFQAAABUAAAAaAAAAAAAAAAAAAAAAAAAABwAAAAIAAAACAAAA" + "AgAAAAIAAAACAAAABgAAAAAAAAAJAAAACgAAAAwAAAAKAAAACQAAAAgAAAAI" + "AAAAAAAAAAYAAAAJAAAAAQAAAAEAAAABAAAAAAAAAAEAAAAAAAAABwAAAAIA" + "AAACAAAAAgAAAAYAAAAAAAAAAgAAAAAAAAAJAAAACQAAAAkAAAAJAAAADgAA" + "AAgAAAAIAAAAAAAAAA4AAAABAAAABwAAAAkAAAAHAAAAAAAAAAAAAAAAAAAA" + "CAAAAAgAAAAIAAAAHAAAAAgAAAAJAAAABgAAAAAAAAAHAAAACAAAAA4AAAAJ" + "AAAABgAAAAAAAAAAAAAAAAAAAAcAAAAJAAAACQAAAAkAAAAHAAAAAQAAAAEA" + "AAAAAAAABwAAAAgAAAAIAAAACAAAAAcAAAAAAAAAAAAAAAAAAAAOAAAACQAA" + "AAkAAAAJAAAADgAAAAgAAAAIAAAAAAAAAA0AAAASAAAAEgAAABIAAAAOAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAIAAAAEAAAAAAAAAAE" + "AAAAAAAAAAQAAAACAAAAAQAAABEAAAAOAAAAAAAAAAgAAAAEAAAAAgAAAAEA" + "AAACAAAABAAAAAgAAAAAAAAAAAAAAAAAAAAfAAAAAAAAAB8AAAAAAAAAAAAA" + "AAAAAAACAAAABAAAAAgAAAAQAAAACAAAAAQAAAACAAAAAAAAAAgAAAAEAAAA" + "DAAAAAwAAAAAAAAADAAAAAwAAAAAAAAADAAAAAwAAAAAAAAAAAAAAAwAAAAM" + "AAAAAAAAAAAAAAAcAAAAAgAAAAEAAAAPAAAAEQAAABEAAAAOAAAAAAAAAA4A" + "AAARAAAAEQAAAA4AAAARAAAAEQAAAA4AAAAAAAAACAAAAAgAAAAIAAAABAAA" + "AAIAAAABAAAAHwAAAAAAAAAOAAAAEQAAABEAAAAeAAAAEAAAAAgAAAAHAAAA" + "AAAAAA4AAAARAAAAAQAAAAEAAAAeAAAAEAAAAB8AAAAAAAAAAgAAAAIAAAAf" + "AAAAEgAAAAoAAAAGAAAAAgAAAAAAAAAOAAAAEQAAAAEAAAAGAAAAAgAAAAEA" + "AAAfAAAAAAAAAB8AAAAQAAAACAAAAAYAAAABAAAAEQAAAA4AAAAAAAAADgAA" + "AAQAAAAEAAAABAAAAAQAAAAMAAAABAAAAAAAAAAOAAAAEQAAABkAAAAVAAAA" + "EwAAABEAAAAOAAAAAAAAAAAAAAAQAAAACAAAAAQAAAACAAAAAQAAAAAAAAAA" + "AAAADAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAfAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAEAAAADAAAAAwAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAQAAAAEAAAAHwAAAAQAAAAEAAAAAAAAAAAAAAAAAAAA" + "BAAAABUAAAAOAAAAFQAAAAQAAAAAAAAAAAAAAAgAAAAEAAAAAgAAAAIAAAAC" + "AAAABAAAAAgAAAAAAAAAAgAAAAQAAAAIAAAACAAAAAgAAAAEAAAAAgAAAAAA" + "AAAAAAAAAAAAAAAAAAAEAAAAAgAAAAYAAAAGAAAAAAAAAA0AAAASAAAAFQAA" + "AAwAAAAKAAAACgAAAAQAAAAAAAAAAwAAABMAAAAIAAAABAAAAAIAAAAZAAAA" + "GAAAAAAAAAAEAAAAHgAAAAUAAAAOAAAAFAAAAA8AAAAEAAAAAAAAAAoAAAAK" + "AAAAHwAAAAoAAAAfAAAACgAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoA" + "AAAKAAAACgAAAAAAAAAEAAAAAAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAUAAAAFAAAABQAAAD0AAAAnAAAAIAAAACAAAAA4" + "AAAABAAAAAwAAAAdAAAAPwAAAD8AAAAdAAAADAAAAAQAAAAAAAAAAAAAAAAA" + "AAA/AAAAPwAAAAAAAAAAAAAAAAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAA" + "AAwAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAPwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAD8A" + "AAA/AAAAPwAAAD8AAAA/AAAABwAAAAcAAAAHAAAABwAAAD8AAAA/AAAAPwAA" + "AD8AAAA4AAAAOAAAADgAAAA4AAAAPwAAAD8AAAA/AAAAPwAAAAAAAAAAAAAA" + "AAAAAAAAAAA4AAAAOAAAADgAAAA4AAAAPwAAAD8AAAA/AAAAPwAAADgAAAA4" + "AAAAOAAAADgAAAAHAAAABwAAAAcAAAAHAAAAOAAAADgAAAA4AAAAOAAAADgA" + "AAA4AAAAOAAAADgAAAA4AAAAOAAAADgAAAA4AAAAAAAAAAAAAAAAAAAAAAAA" + "AAwAAAAeAAAAPwAAAAwAAAAMAAAADAAAAAwAAAAMAAAACAAAAAwAAAAuAAAA" + "PwAAAD8AAAAuAAAADAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAwA" + "AAAMAAAADAAAAAwAAAA/AAAAHgAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAACEAAAASAAAADAAAAAwAAAAtAAAAPwAAAAwAAAAMAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAAABwAAAAcAAAAH" + "AAAAPwAAAD8AAAA/AAAAPwAAAAcAAAAHAAAABwAAAAcAAAAHAAAABwAAAAcA" + "AAAHAAAABwAAAAcAAAAHAAAABwAAADgAAAA4AAAAOAAAADgAAAAHAAAABwAA" + "AAcAAAAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/AAAA" + "PwAAAD8AAAA/AAAAAAAAAAAAAAAAAAAAAAAAAAcAAAAHAAAABwAAAAcAAAAA" + "AAAAAAAAAAAAAAAAAAAAOAAAADgAAAA4AAAAOAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAA" + "AD8AAAAAAAAAAQAAAAEAAAABAAAAHwAAABEAAAARAAAAEQAAAAAAAAABAAAA" + "HwAAABUAAAAVAAAAFQAAABUAAAAVAAAAAAAAAA4AAAARAAAAAQAAAAcAAAAB" + "AAAAEQAAAA4AAAAAAAAAHwAAABUAAAAVAAAAFQAAABUAAAAVAAAAEQAAAAAA" + "AAAOAAAAEQAAAAEAAAAGAAAAEQAAABEAAAAOAAAAAAAAABkAAAAVAAAAFQAA" + "ABkAAAARAAAAEQAAABEAAAAAAAAAHgAAABEAAAARAAAAHgAAABAAAAAQAAAA" + "EAAAAAAAAAAeAAAAEQAAABEAAAAeAAAAEQAAABEAAAAeAAAAAAAAABEAAAAV" + "AAAAFQAAAA4AAAAVAAAAFQAAABEAAAAAAAAAEAAAAAgAAAAEAAAACgAAABEA" + "AAARAAAAEQAAAAAAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAfAAAAAAAA" + "AA4AAAARAAAAEAAAABAAAAAQAAAAEQAAAA4AAAAAAAAAEAAAABAAAAAQAAAA" + "HgAAABEAAAARAAAAHgAAAAAAAAARAAAACQAAAAUAAAAPAAAAEQAAABEAAAAP" + "AAAAAAAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAAB8AAAAAAAAADgAAABEA" + "AAARAAAAEQAAABEAAAARAAAADgAAAAAAAAARAAAAEQAAABEAAAAfAAAAEQAA" + "ABEAAAARAAAAAAAAABEAAAARAAAAEQAAABUAAAAVAAAAGwAAABEAAAAAAAAA" + "CQAAAAkAAAAJAAAACQAAAAkAAAAJAAAABwAAAAAAAAARAAAAEgAAABQAAAAY" + "AAAAFAAAABIAAAARAAAAAAAAABEAAAARAAAAGQAAABUAAAATAAAAEQAAABUA" + "AAAAAAAAEQAAABEAAAAZAAAAFQAAABMAAAARAAAAEQAAAAAAAAARAAAAEQAA" + "AAoAAAAEAAAACgAAABEAAAARAAAAAAAAABAAAAAQAAAAEAAAABAAAAAQAAAA" + "EQAAAB8AAAAAAAAABAAAAAQAAAAfAAAAFQAAABUAAAAfAAAABAAAAAAAAAAf" + "AAAAEAAAABAAAAAeAAAAEAAAABAAAAAfAAAAAAAAABEAAAAfAAAACgAAAAoA" + "AAAKAAAACgAAAAYAAAAAAAAAAQAAAB8AAAASAAAAEgAAABIAAAASAAAAEgAA" + "AAAAAAAeAAAAEQAAABEAAAAeAAAAEAAAABAAAAAfAAAAAAAAABEAAAARAAAA" + "HwAAABEAAAARAAAACgAAAAQAAAAAAAAAEgAAABUAAAAVAAAAHQAAABUAAAAV" + "AAAAEgAAAAAAAAAfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAEQAAAA4AAAAAAAAADgAAAAIAAAACAAAAAgAA" + "AAIAAAACAAAADgAAAAAAAAAAAAAAAQAAAAIAAAAEAAAACAAAABAAAAAAAAAA" + "AAAAAA4AAAAIAAAACAAAAAgAAAAIAAAACAAAAA4AAAAAAAAAHwAAABAAAAAI" + "AAAADgAAAAIAAAABAAAAHwAAAAAAAAAEAAAABAAAAAQAAAAEAAAACgAAABEA" + "AAARAAAAAAAAABEAAAARAAAACgAAAAQAAAAKAAAAEQAAABEAAAAAAAAACgAA" + "ABUAAAAVAAAAFQAAABEAAAARAAAAEQAAAAAAAAAEAAAABAAAAAoAAAAKAAAA" + "EQAAABEAAAARAAAAAAAAAA4AAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAAA" + "AAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAAHwAAAAAAAAAOAAAAEQAAAAEA" + "AAAOAAAAEAAAABEAAAAOAAAAAAAAABEAAAASAAAAFAAAAB4AAAARAAAAEQAA" + "AB4AAAAAAAAADQAAABIAAAAVAAAAEQAAABEAAAARAAAADgAAAAAAAAAQAAAA" + "EAAAABAAAAAeAAAAEQAAABEAAAAeAAAAAAAAAA4AAAARAAAAEQAAABEAAAAR" + "AAAAEQAAAA4AAAAAAAAAEQAAABEAAAATAAAAFQAAABkAAAARAAAAEQAAAAAA" + "AAARAAAAEQAAABEAAAAVAAAAFQAAABsAAAARAAAAAAAAAB8AAAARAAAAEAAA" + "ABAAAAAQAAAAEAAAABAAAAAAAAAAEQAAABIAAAAUAAAAGAAAABQAAAASAAAA" + "EQAAAAAAAAAOAAAAEQAAABEAAAABAAAAAQAAAAEAAAABAAAAAAAAAA4AAAAE" + "AAAABAAAAAQAAAAEAAAABAAAAA4AAAAAAAAAEQAAABEAAAARAAAAHwAAABEA" + "AAARAAAAEQAAAAAAAAAPAAAAEQAAABMAAAAQAAAAEAAAABEAAAAOAAAAAAAA" + "ABAAAAAQAAAAEAAAAB4AAAAQAAAAEAAAAB8AAAAAAAAAHwAAABAAAAAQAAAA" + "HgAAABAAAAAQAAAAHwAAAAAAAAAeAAAACQAAAAkAAAAJAAAACQAAAAkAAAAe" + "AAAAAAAAAA4AAAARAAAAEAAAABAAAAAQAAAAEQAAAA4AAAAAAAAAHgAAABEA" + "AAARAAAAHgAAABEAAAARAAAAHgAAAAAAAAARAAAAEQAAAB8AAAARAAAAEQAA" + "AAoAAAAEAAAAAAAAAA4AAAAQAAAAFwAAABUAAAATAAAAEQAAAA4AAAAAAAAA" + "BAAAAAAAAAAEAAAAAgAAAAEAAAARAAAADgAAAAAAAAAIAAAABAAAAAIAAAAB" + "AAAAAgAAAAQAAAAIAAAAAAAAAAAAAAAAAAAAHwAAAAAAAAAfAAAAAAAAAAAA" + "AAAAAAAAAgAAAAQAAAAIAAAAEAAAAAgAAAAEAAAAAgAAAAAAAAAIAAAABAAA" + "AAwAAAAMAAAAAAAAAAwAAAAMAAAAAAAAAAwAAAAMAAAAAAAAAAAAAAAMAAAA" + "DAAAAAAAAAAAAAAAHAAAAAIAAAABAAAADwAAABEAAAARAAAADgAAAAAAAAAO" + "AAAAEQAAABEAAAAOAAAAEQAAABEAAAAOAAAAAAAAAAgAAAAIAAAACAAAAAQA" + "AAACAAAAAQAAAB8AAAAAAAAADgAAABEAAAARAAAAHgAAABAAAAAIAAAABwAA" + "AAAAAAAOAAAAEQAAAAEAAAABAAAAHgAAABAAAAAfAAAAAAAAAAIAAAACAAAA" + "HwAAABIAAAAKAAAABgAAAAIAAAAAAAAADgAAABEAAAABAAAABgAAAAIAAAAB" + "AAAAHwAAAAAAAAAfAAAAEAAAAAgAAAAGAAAAAQAAABEAAAAOAAAAAAAAAA4A" + "AAAEAAAABAAAAAQAAAAEAAAADAAAAAQAAAAAAAAADgAAABEAAAAZAAAAFQAA" + "ABMAAAARAAAADgAAAAAAAAAAAAAAEAAAAAgAAAAEAAAAAgAAAAEAAAAAAAAA" + "AAAAAAwAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAHwAAAAAAAAAAAAAAAAAAAAAAAAAIAAAABAAAAAwAAAAMAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAEAAAABAAAAB8AAAAEAAAABAAAAAAAAAAAAAAAAAAA" + "AAQAAAAVAAAADgAAABUAAAAEAAAAAAAAAAAAAAAIAAAABAAAAAIAAAACAAAA" + "AgAAAAQAAAAIAAAAAAAAAAIAAAAEAAAACAAAAAgAAAAIAAAABAAAAAIAAAAA" + "AAAAAAAAAAAAAAAAAAAABAAAAAIAAAAGAAAABgAAAAAAAAANAAAAEgAAABUA" + "AAAMAAAACgAAAAoAAAAEAAAAAAAAAAMAAAATAAAACAAAAAQAAAACAAAAGQAA" + "ABgAAAAAAAAABAAAAB4AAAAFAAAADgAAABQAAAAPAAAABAAAAAAAAAAKAAAA" + "CgAAAB8AAAAKAAAAHwAAAAoAAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK" + "AAAACgAAAAoAAAAAAAAABAAAAAAAAAAEAAAABAAAAAQAAAAEAAAABAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAFAAAABQAAAAUAAAA9AAAAJwAAACAAAAAgAAAA" + "OAAAAAQAAAAMAAAAHQAAAD8AAAA/AAAAHQAAAAwAAAAEAAAAAAAAAAAAAAAA" + "AAAAPwAAAD8AAAAAAAAAAAAAAAAAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwA" + "AAAMAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAD8AAAA/" + "AAAAPwAAAD8AAAA/AAAAPwAAAAcAAAAHAAAABwAAAAcAAAA/AAAAPwAAAD8A" + "AAA/AAAAOAAAADgAAAA4AAAAOAAAAD8AAAA/AAAAPwAAAD8AAAAAAAAAAAAA" + "AAAAAAAAAAAAOAAAADgAAAA4AAAAOAAAAD8AAAA/AAAAPwAAAD8AAAA4AAAA" + "OAAAADgAAAA4AAAABwAAAAcAAAAHAAAABwAAADgAAAA4AAAAOAAAADgAAAA4" + "AAAAOAAAADgAAAA4AAAAOAAAADgAAAA4AAAAOAAAAAAAAAAAAAAAAAAAAAAA" + "AAAMAAAAHgAAAD8AAAAMAAAADAAAAAwAAAAMAAAADAAAAAgAAAAMAAAALgAA" + "AD8AAAA/AAAALgAAAAwAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAM" + "AAAADAAAAAwAAAAMAAAAPwAAAB4AAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAhAAAAEgAAAAwAAAAMAAAALQAAAD8AAAAMAAAADAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAAAAcAAAAHAAAA" + "BwAAAD8AAAA/AAAAPwAAAD8AAAAHAAAABwAAAAcAAAAHAAAABwAAAAcAAAAH" + "AAAABwAAAAcAAAAHAAAABwAAAAcAAAA4AAAAOAAAADgAAAA4AAAABwAAAAcA" + "AAAHAAAABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwAA" + "AD8AAAA/AAAAPwAAAAAAAAAAAAAAAAAAAAAAAAAHAAAABwAAAAcAAAAHAAAA" + "AAAAAAAAAAAAAAAAAAAAADgAAAA4AAAAOAAAADgAAAAAAAAAAAAAAAAAAAAA" + "AAAAAAAAAAAAAAAAAAAAAAAAAA==";
 }
 
-// src/lib/rk86_keyboard.ts
+// src/lib/core/rk86_keyboard.ts
 class Keyboard {
   state;
   modifiers;
@@ -2662,7 +2688,7 @@ var SS = 32;
 var US = 64;
 var RL = 128;
 
-// src/lib/hex_map.ts
+// src/lib/core/hex_map.ts
 function create(array, width = 16) {
   const v = {};
   for (let i = 0;i < array.length; i += width) {
@@ -2682,7 +2708,7 @@ function parse2(hex2) {
   return array;
 }
 
-// src/lib/rk86_memory.ts
+// src/lib/core/rk86_memory.ts
 class Memory {
   buf = [];
   update_ruslat = () => {};
@@ -2957,63 +2983,7 @@ class Memory {
   }
 }
 
-// src/lib/SoundPlayer.ts
-class SoundPlayer {
-  audioCtx;
-  gainNode;
-  oscillator = null;
-  constructor(audioContext) {
-    this.audioCtx = audioContext;
-    this.gainNode = this.audioCtx.createGain();
-    this.gainNode.connect(this.audioCtx.destination);
-  }
-  play(freq, volume, wave) {
-    this.oscillator = this.audioCtx.createOscillator();
-    this.oscillator.connect(this.gainNode);
-    this.oscillator.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
-    if (wave) {
-      this.oscillator.type = wave;
-    }
-    this.gainNode.gain.value = volume;
-    this.oscillator.start();
-  }
-  stop(when) {
-    const offset = when || 0.05;
-    if (this.oscillator)
-      this.oscillator.stop(this.audioCtx.currentTime + offset);
-  }
-}
-
-// src/lib/rk86_sound.ts
-class Sound {
-  volume = 0.05;
-  stop_timer = null;
-  previous_tone = null;
-  player;
-  constructor() {
-    const ctx = new AudioContext;
-    ctx.resume();
-    this.player = new SoundPlayer(ctx);
-  }
-  set_stop_timer(duration) {
-    return setTimeout(() => {
-      this.player.stop();
-      this.previous_tone = null;
-    }, duration * 1000);
-  }
-  play(tone, duration) {
-    clearTimeout(this.stop_timer);
-    if (this.previous_tone !== tone) {
-      if (this.previous_tone)
-        this.player.stop();
-      this.player.play(tone, this.volume, "square");
-    }
-    this.previous_tone = tone;
-    this.stop_timer = this.set_stop_timer(duration);
-  }
-}
-
-// src/lib/rk86_runner.ts
+// src/lib/core/rk86_runner.ts
 class Runner {
   paused = false;
   tracer = null;
@@ -3023,6 +2993,7 @@ class Runner {
   last_iff_raise_ticks = 0;
   last_iff = 0;
   sound = null;
+  sound_factory;
   instructions_per_millisecond = 0;
   ticks_per_millisecond = 0;
   FREQ = 1780000;
@@ -3052,15 +3023,16 @@ class Runner {
     this.last_iff = iff;
   }
   init_sound(enabled) {
-    if (enabled && this.sound == null) {
-      this.sound = new Sound;
+    if (enabled && this.sound == null && this.sound_factory) {
+      this.sound = this.sound_factory();
       console.log("\u0437\u0432\u0443\u043A \u0432\u043A\u043B\u044E\u0447\u0435\u043D");
     } else if (!enabled) {
       this.sound = null;
       console.log("\u0437\u0432\u0443\u043A \u0432\u044B\u043A\u043B\u044E\u0447\u0435\u043D");
     }
   }
-  execute() {
+  execute(options = {}) {
+    const { terminate_address, on_terminate, exit_on_halt } = options;
     clearTimeout(this.execute_timer);
     if (!this.paused) {
       let batch_ticks = 0;
@@ -3088,6 +3060,14 @@ class Runner {
           this.machine.ui.on_visualizer_hit(this.machine.memory.read_raw(this.machine.cpu.pc));
         }
         batch_instructions += 1;
+        if (terminate_address !== undefined && this.machine.cpu.pc === terminate_address) {
+          on_terminate?.();
+          return;
+        }
+        if (exit_on_halt && this.machine.memory.read_raw(this.machine.cpu.pc) === 118) {
+          on_terminate?.();
+          return;
+        }
       }
       const now = performance.now();
       const elapsed = now - this.previous_batch_time;
@@ -3095,7 +3075,7 @@ class Runner {
       this.instructions_per_millisecond = batch_instructions / elapsed;
       this.ticks_per_millisecond = batch_ticks / elapsed;
     }
-    this.execute_timer = setTimeout(() => this.execute(), 10);
+    this.execute_timer = setTimeout(() => this.execute(options), 10);
   }
   pause() {
     this.paused = true;
@@ -3109,7 +3089,7 @@ class Runner {
   }
 }
 
-// src/lib/rk86_screen.ts
+// src/lib/core/rk86_screen.ts
 class Screen {
   static #update_rate = 40;
   machine;
@@ -3126,6 +3106,7 @@ class Screen {
   light_pen_active;
   video_memory_base = 0;
   video_memory_size = 0;
+  ready = false;
   renderer;
   constructor(machine) {
     this.machine = machine;
@@ -3184,11 +3165,12 @@ class Screen {
     this.render_loop();
   }
   render_loop() {
-    this.renderer.update();
+    if (this.ready)
+      this.renderer.update();
     setTimeout(() => this.render_loop(), Screen.#update_rate);
   }
-  last_width = 0;
-  last_height = 0;
+  last_width = -1;
+  last_height = -1;
   set_geometry(width, height) {
     this.width = width;
     this.height = height;
@@ -3199,8 +3181,10 @@ class Screen {
     console.log(`\u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D \u0440\u0430\u0437\u043C\u0435\u0440 \u044D\u043A\u0440\u0430\u043D\u0430: ${width} x ${height}`);
     this.last_width = this.width;
     this.last_height = this.height;
+    if (this.last_video_memory_base !== -1)
+      this.ready = true;
   }
-  last_video_memory_base = 0;
+  last_video_memory_base = -1;
   set_video_memory(base) {
     this.video_memory_base = base;
     this.machine.ui.update_video_memory_address(this.video_memory_base);
@@ -3208,6 +3192,8 @@ class Screen {
       return;
     console.log(`\u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0430 \u0432\u0438\u0434\u0435\u043E\u043F\u0430\u043C\u044F\u0442\u044C \u0441 \u0430\u0434\u0440\u0435\u0441\u0430`, `${hex16(this.video_memory_base)}`, `\u0440\u0430\u0437\u043C\u0435\u0440\u043E\u043C ${hex16(this.video_memory_size)}`);
     this.last_video_memory_base = this.video_memory_base;
+    if (this.last_width !== -1)
+      this.ready = true;
   }
   set_cursor(x, y) {
     this.cursor_x = x;
@@ -3219,7 +3205,7 @@ class Screen {
   }
 }
 
-// src/lib/rk86_snapshot.ts
+// src/lib/core/rk86_snapshot.ts
 function rk86_snapshot_restore(snapshot, machine, keys_injector) {
   try {
     const json = typeof snapshot === "string" ? JSON.parse(snapshot) : snapshot;
@@ -3242,7 +3228,7 @@ function rk86_snapshot_restore(snapshot, machine, keys_injector) {
   }
 }
 
-// src/lib/rk86_tape.ts
+// src/lib/web/tape.ts
 class Tape {
   machine;
   previous_bit_ticks = 0;
@@ -3343,7 +3329,7 @@ class Tape {
   }
 }
 
-// src/lib/rk86_terminal.ts
+// src/lib/terminal/rk86_terminal.ts
 var charMap = {
   0: " ",
   1: "\u2598",
@@ -3511,6 +3497,8 @@ class IO {
 
 class TerminalRenderer {
   machine;
+  loadInfo = "";
+  loadInfoPrinted = false;
   connect(machine) {
     this.machine = machine;
   }
@@ -3540,6 +3528,11 @@ class TerminalRenderer {
     }
     output += `${dim}\u2514${"\u2500".repeat(w)}\u2518${reset}
 `;
+    if (this.loadInfo && !this.loadInfoPrinted && screen.video_memory_base > 0) {
+      output += this.loadInfo + `
+`;
+      this.loadInfoPrinted = true;
+    }
     process.stdout.write(output);
   }
 }
@@ -3656,17 +3649,22 @@ function printHelp() {
 \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435: bunx rk86 [\u043E\u043F\u0446\u0438\u0438] [\u0444\u0430\u0439\u043B]
 
 \u041E\u043F\u0446\u0438\u0438:
-  -h              \u0441\u043F\u0440\u0430\u0432\u043A\u0430
-  -l              \u0441\u043F\u0438\u0441\u043E\u043A \u0444\u0430\u0439\u043B\u043E\u0432 \u0438\u0437 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0430
-  -m <\u0444\u0430\u0439\u043B>       \u043C\u043E\u043D\u0438\u0442\u043E\u0440 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E: \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0439 mon32.bin)
-  -p              \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0444\u0430\u0439\u043B \u0431\u0435\u0437 \u0437\u0430\u043F\u0443\u0441\u043A\u0430
+  -v                       \u0432\u0435\u0440\u0441\u0438\u044F
+  -h                       \u0441\u043F\u0440\u0430\u0432\u043A\u0430
+  -l                       \u0441\u043F\u0438\u0441\u043E\u043A \u0444\u0430\u0439\u043B\u043E\u0432 \u0438\u0437 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0430
+  -m <\u0444\u0430\u0439\u043B>                \u043C\u043E\u043D\u0438\u0442\u043E\u0440 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E: \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u0439 mon32.bin)
+  -p                       \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0444\u0430\u0439\u043B \u0431\u0435\u0437 \u0437\u0430\u043F\u0443\u0441\u043A\u0430
+  --exit-halt              \u0432\u044B\u0445\u043E\u0434 \u043F\u0440\u0438 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0438 HLT
+  --exit-address [\u0430\u0434\u0440\u0435\u0441]   \u0432\u044B\u0445\u043E\u0434 \u043F\u0440\u0438 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0435 \u043D\u0430 \u0430\u0434\u0440\u0435\u0441 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E: 0xFFFE)
 
 \u041F\u0440\u0438\u043C\u0435\u0440\u044B:
-  bunx rk86                  \u0437\u0430\u043F\u0443\u0441\u043A \u043C\u043E\u043D\u0438\u0442\u043E\u0440\u0430
-  bunx rk86 CHESS.GAM        \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0438 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B
-  bunx rk86 -p CHESS.GAM     \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0444\u0430\u0439\u043B (\u0431\u0435\u0437 \u0437\u0430\u043F\u0443\u0441\u043A\u0430)
-  bunx rk86 -m mon16.bin     \u0437\u0430\u043F\u0443\u0441\u043A \u0441 \u0434\u0440\u0443\u0433\u0438\u043C \u043C\u043E\u043D\u0438\u0442\u043E\u0440\u043E\u043C
-  bunx rk86 -l               \u0441\u043F\u0438\u0441\u043E\u043A \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0445 \u0444\u0430\u0439\u043B\u043E\u0432
+  bunx rk86                          \u0437\u0430\u043F\u0443\u0441\u043A \u043C\u043E\u043D\u0438\u0442\u043E\u0440\u0430
+  bunx rk86 CHESS.GAM                \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0438 \u0437\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u0444\u0430\u0439\u043B
+  bunx rk86 -p CHESS.GAM             \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0444\u0430\u0439\u043B (\u0431\u0435\u0437 \u0437\u0430\u043F\u0443\u0441\u043A\u0430)
+  bunx rk86 -m mon16.bin             \u0437\u0430\u043F\u0443\u0441\u043A \u0441 \u0434\u0440\u0443\u0433\u0438\u043C \u043C\u043E\u043D\u0438\u0442\u043E\u0440\u043E\u043C
+  bunx rk86 --exit-halt prog.bin     \u0432\u044B\u0445\u043E\u0434 \u043F\u0440\u0438 HLT
+  bunx rk86 --exit-address prog.bin  \u0432\u044B\u0445\u043E\u0434 \u043F\u0440\u0438 JMP FFFEh
+  bunx rk86 -l                       \u0441\u043F\u0438\u0441\u043E\u043A \u0438\u0437\u0432\u0435\u0441\u0442\u043D\u044B\u0445 \u0444\u0430\u0439\u043B\u043E\u0432
 
 \u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435:
   Ctrl+C    \u0432\u044B\u0445\u043E\u0434`);
@@ -3682,21 +3680,46 @@ async function listFiles() {
     console.log(`\x1B[33m${entry.name.padEnd(20)}\x1B[0m ${title}${desc}`);
   }
 }
+function flag(args, name) {
+  const i = args.indexOf(name);
+  if (i == -1)
+    return false;
+  args.splice(i, 1);
+  return true;
+}
+function arg(args, name, defaultValue, matcher, convertor) {
+  const convert = (v) => convertor ? convertor(v) : v;
+  const i = args.indexOf(name);
+  if (i == -1)
+    return;
+  if (i + 1 >= args.length || matcher && !matcher.test(args[i + 1])) {
+    args.splice(i, 1);
+    return defaultValue ? convert(defaultValue) : defaultValue;
+  }
+  const value = args[i + 1];
+  args.splice(i, 2);
+  return convert(value);
+}
 async function main() {
   const args = process.argv.slice(2);
-  if (args.includes("-h") || args.includes("--help")) {
+  if (flag(args, "-v") || flag(args, "--version")) {
+    console.log(`rk86 ${package_default.version}`);
+    process.exit(0);
+  }
+  if (flag(args, "-h") || flag(args, "--help")) {
     printHelp();
     process.exit(0);
   }
-  if (args.includes("-l") || args.includes("--list")) {
+  if (flag(args, "-l") || flag(args, "--list")) {
     await listFiles();
     process.exit(0);
   }
-  const loadOnly = args.includes("-p");
-  const monitorIdx = args.indexOf("-m");
-  const monitorFile_ = monitorIdx >= 0 ? args[monitorIdx + 1] : undefined;
-  const positional = args.filter((a, i) => !a.startsWith("-") && (monitorIdx < 0 || i !== monitorIdx + 1));
-  const programFile = positional[0];
+  const loadOnly = flag(args, "-p");
+  const exitOnHalt = flag(args, "--exit-halt");
+  const exitAddrValue = arg(args, "--exit-address", "0xFFFE", /^0x[0-9a-fA-F]+$/i, (v) => parseInt(v, 16));
+  const exitAddr = exitAddrValue !== undefined;
+  const monitorFile_ = arg(args, "-m");
+  const programFile = args[0];
   const keyboard = new Keyboard;
   const io = new IO;
   const machineBuilder = {
@@ -3716,25 +3739,38 @@ async function main() {
   const monitorFile = parse_rk86_binary(monitorFile_ || "mon32.bin", monitorContent);
   machine.memory.load_file(monitorFile);
   let entryPoint;
+  let loadInfo = "";
   if (programFile) {
     const content = await fetchFile(programFile);
     const { ok, json } = parse(content);
     if (ok) {
       rk86_snapshot_restore(json, machine);
       entryPoint = parseInt(json.cpu.pc);
-      console.error(`\u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D \u043E\u0431\u0440\u0430\u0437: ${programFile} (PC=${entryPoint.toString(16)})`);
+      loadInfo = `\u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D: ${programFile} (PC=${hex16(entryPoint)})`;
     } else {
       const file = parse_rk86_binary(programFile, content);
       machine.memory.load_file(file);
       entryPoint = file.entry;
-      console.error(`\u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D: ${programFile} (${file.start.toString(16)}-${file.end.toString(16)}, G${file.entry.toString(16)})`);
+      loadInfo = `\u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D: ${programFile} (${hex16(file.start)}-${hex16(file.end)}, G${hex16(file.entry)})`;
     }
   }
   process.stdout.write("\x1B[?25l");
   process.stdout.write("\x1B[2J");
   setupKeyboard(keyboard);
-  machine.screen.start(new TerminalRenderer);
-  machine.runner.execute();
+  const renderer = new TerminalRenderer;
+  renderer.loadInfo = loadInfo;
+  machine.screen.start(renderer);
+  const onTerminate = exitOnHalt || exitAddr ? () => {
+    renderer.update();
+    console.log();
+    console.log("\u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043B\u0430 \u0440\u0430\u0431\u043E\u0442\u0443 \u043D\u0430", hex16(machine.cpu.pc));
+    process.exit(0);
+  } : undefined;
+  machine.runner.execute({
+    terminate_address: exitAddr ? exitAddrValue : undefined,
+    exit_on_halt: exitOnHalt,
+    on_terminate: onTerminate
+  });
   if (entryPoint !== undefined && !loadOnly) {
     setTimeout(() => machine.cpu.jump(entryPoint), 500);
   }

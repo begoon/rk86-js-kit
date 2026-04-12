@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "bun:test";
 
-import { Keyboard } from "../src/lib/rk86_keyboard.ts";
+import { Keyboard } from "../src/lib/core/rk86_keyboard.ts";
 
 let keyboard!: Keyboard;
 

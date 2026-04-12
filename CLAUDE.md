@@ -18,17 +18,23 @@ RK-86 emulator (Intel 8080 CPU) built with SvelteKit. Also available as a standa
 - `just test-ci` — full CI suite
 - `bun run check` — svelte-check type checking
 - `just release-alpha` / `just release-beta` — deploy with base path
+- `just terminal-run [args]` — run terminal emulator locally
+- `just terminal-build` — bundle terminal to npm package
+- `just build-asm` — assemble all i8080 programs in `info/asm/`
 
 ## Structure
 
-- `src/lib/` — emulator core (CPU, memory, screen, keyboard, sound, runner, disassembler, CLI)
-- `src/lib/boot.ts` — machine initialization, wiring UI to emulator
-- `src/lib/radio86-emulator.ts` — standalone web component
-- `tools/build_catalog.ts` — catalog generator (runs at build time via svelte.config.js)
+- `src/lib/core/` — emulator core (CPU, memory, screen, keyboard, sound interface, runner, disassembler)
+- `src/lib/web/` — browser layer (boot, canvas renderer, Web Audio sound, tape with save-to-file)
+- `src/lib/terminal/` — terminal emulator (Node.js/Bun, Unicode screen rendering)
+- `src/lib/component/` — standalone `<radio86-emulator>` web component
+- `tools/` — build scripts (catalog generator, version)
 - `src/routes/` — SvelteKit pages and UI components
-- `src/routes/ui_state.svelte.ts` — reactive bridge between imperative engine and Svelte
+- `src/routes/state.svelte.ts` — reactive bridge between imperative engine and Svelte
 - `src/routes/catalog/` — program catalog page
 - `static/` — static assets (assembler HTML, icons, ROM/program files, catalog data)
+- `info/monitor/` — monitor ROM documentation, source, listing
+- `info/asm/` — example i8080 assembly programs
 - `tests/` — bun unit tests
 - `tests/cpu/` — auto-generated table-driven CPU test data (one file per instruction)
 - `tests/generate_cpu_data.ts` — generates `tests/cpu/*_data.ts` from the CPU implementation

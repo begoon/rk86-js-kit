@@ -1,20 +1,21 @@
-import { ui } from "../routes/state.svelte";
-import { hex16 } from "./hex.js";
-import { I8080 } from "./i8080.js";
-import type { RK86File } from "./rk86_file_parser.js";
-import * as FileParser from "./rk86_file_parser.js";
-import { rk86_font_image } from "./rk86_font.js";
-import { Keyboard } from "./rk86_keyboard.js";
-import type { SequenceAction } from "./rk86_keyboard_injector.js";
-import { convert_keyboard_sequence } from "./rk86_keyboard_injector.js";
-import type { Machine, MachineBuilder } from "./rk86_machine.js";
-import { Memory } from "./rk86_memory.js";
-import { CanvasRenderer } from "./rk86_renderer.js";
-import { Runner } from "./rk86_runner.js";
-import { Screen } from "./rk86_screen.js";
-import { rk86_snapshot, rk86_snapshot_restore } from "./rk86_snapshot.js";
-import { Tape } from "./rk86_tape.js";
+import { ui } from "../../routes/state.svelte.js";
+import { hex16 } from "../core/hex.js";
+import { I8080 } from "../core/i8080.js";
+import type { RK86File } from "../core/rk86_file_parser.js";
+import * as FileParser from "../core/rk86_file_parser.js";
+import { rk86_font_image } from "../core/rk86_font.js";
+import { Keyboard } from "../core/rk86_keyboard.js";
+import type { SequenceAction } from "../core/rk86_keyboard_injector.js";
+import { convert_keyboard_sequence } from "../core/rk86_keyboard_injector.js";
+import type { Machine, MachineBuilder } from "../core/rk86_machine.js";
+import { Memory } from "../core/rk86_memory.js";
+import { Runner } from "../core/rk86_runner.js";
+import { Screen } from "../core/rk86_screen.js";
+import { rk86_snapshot, rk86_snapshot_restore } from "../core/rk86_snapshot.js";
+import { CanvasRenderer } from "./renderer.js";
 import { saveAs } from "./saver.js";
+import { Sound } from "./sound.js";
+import { Tape } from "./tape.js";
 const elements = new Map();
 
 // ---
@@ -36,7 +37,7 @@ export class UI {
     screenshot_count = 1;
     memory_snapshot_name = "rk86-memory";
     memory_snapshot_count = 1;
-    terminal: { put: (str: string) => void; history: string[] };
+    terminal!: { put: (str: string) => void; history: string[] };
     i8080disasm: unknown;
     visualizer: unknown;
     visualizer_visible = false;
@@ -331,6 +332,7 @@ export async function main(host: HostCallbacks) {
     console.log("магнитофон инициализирован");
 
     machine.runner = new Runner(machine);
+    machine.runner.sound_factory = () => new Sound();
     console.log("исполнитель инициализирован");
 
     machine.memory.update_ruslat = machine.ui.update_ruslat;
