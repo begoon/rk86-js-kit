@@ -24,7 +24,7 @@ RK-86 emulator (Intel 8080 CPU) built with SvelteKit. Also available as a standa
 - `src/lib/` — emulator core (CPU, memory, screen, keyboard, sound, runner, disassembler, CLI)
 - `src/lib/boot.ts` — machine initialization, wiring UI to emulator
 - `src/lib/radio86-emulator.ts` — standalone web component
-- `src/lib/build_catalog.ts` — catalog generator (runs at build time via svelte.config.js)
+- `tools/build_catalog.ts` — catalog generator (runs at build time via svelte.config.js)
 - `src/routes/` — SvelteKit pages and UI components
 - `src/routes/ui_state.svelte.ts` — reactive bridge between imperative engine and Svelte
 - `src/routes/catalog/` — program catalog page
@@ -54,7 +54,7 @@ All four are auto-generated via `svelte.config.js` on every build/dev.
 - Disassembler and Terminal are embedded-only (no standalone floating mode)
 - Assembler is an iframe (`static/i8080asm.html`) accessing `window.parent.machine`
 - `window.machine` is exposed for the assembler iframe
-- UI state from engine callbacks flows through `ui_state.svelte.ts` (reactive `$state` object)
+- UI state from engine callbacks flows through `state.svelte.ts` (reactive `$state` object)
 - Machine methods (`reset`, `restart`, `pause`, `loadCatalogFile`, `runLoadedFile`, `uploadFile`) are assigned in `boot.ts`
 - Keyboard shortcuts: `Cmd/Ctrl+K` then a letter key (`D` for debugger, `A` for assembler, etc.)
 - Icon buttons in toolbar are non-focusable (`tabindex=-1`) to prevent accidental activation via Enter/Space
