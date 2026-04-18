@@ -3,7 +3,7 @@
 
 import { asm } from "asm8080";
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import pkg from "../../../packages/rk86/package.json";
 import { hex16 } from "../core/hex.js";
 import { I8080 } from "../core/i8080.js";
@@ -248,6 +248,13 @@ class TerminalRenderer implements Renderer {
     }
 }
 
+// --- Headless renderer (no output) ---
+
+class HeadlessRenderer implements Renderer {
+    connect(_machine: Machine): void {}
+    update(): void {}
+}
+
 // --- Keyboard input from terminal stdin ---
 
 const KEY_MAP: Record<string, string> = {
@@ -429,6 +436,13 @@ function printHelp() {
   -g <адрес>               адрес запуска (несовместим с -p)
   --exit-halt              выход при выполнении HLT
   --exit-address [адрес]   выход при переходе на адрес (по умолчанию: 0xFFFE)
+  --headless               без отображения экрана (для автотестов)
+  --timeout <сек>          выход по таймауту
+  --memory <файл>          сохранить память в файл при выходе
+  --memory-from <адрес>    начало области дампа памяти (по умолчанию: 0x0000)
+  --memory-to <адрес>      конец области дампа памяти включительно (по умолчанию: 0xFFFF)
+  --screen <файл>          сохранить экран 78x30 как текст при выходе
+  --input <seq>            инъекция клавиш (через запятую): KeyA,Digit1,Enter,...
 
 Примеры:
   bunx rk86                          запуск монитора
@@ -520,6 +534,17 @@ async function main() {
         | undefined;
     const exitAddr = exitAddrValue !== undefined;
     const monitorFile_ = arg(args, "-m") as string | undefined;
+
+    const headless = flag(args, "--headless");
+    const timeoutSec = arg(args, "--timeout", undefined, /^\d+(\.\d+)?$/, parseFloat) as number | undefined;
+    const memoryFile = arg(args, "--memory") as string | undefined;
+    const addrRe = /^(0x)?[0-9a-fA-F]+$/i;
+    const parseAddr = (v: string) => parseInt(v.toLowerCase().startsWith("0x") ? v.slice(2) : v, 16) & 0xffff;
+    const memoryFrom = (arg(args, "--memory-from", undefined, addrRe, parseAddr) as number | undefined) ?? 0x0000;
+    const memoryTo = (arg(args, "--memory-to", undefined, addrRe, parseAddr) as number | undefined) ?? 0xffff;
+    const screenFile = arg(args, "--screen") as string | undefined;
+    const inputSeq = arg(args, "--input") as string | undefined;
+
     const programFile = args[0];
 
     const keyboard = new Keyboard();
@@ -588,23 +613,40 @@ async function main() {
         if (goAddr !== undefined) entryPoint = goAddr;
     }
 
-    // Setup terminal
-    process.stdout.write("\x1b[?25l"); // hide cursor
-    process.stdout.write("\x1b[2J"); // clear screen
+    // Setup terminal (skip in headless mode)
+    if (!headless) {
+        process.stdout.write("\x1b[?25l"); // hide cursor
+        process.stdout.write("\x1b[2J"); // clear screen
+        setupKeyboard(keyboard);
+    } else {
+        process.on("SIGINT", () => doExit(null));
+    }
 
-    setupKeyboard(keyboard);
-    const renderer = new TerminalRenderer();
-    renderer.loadInfo = loadInfo;
+    const renderer: Renderer = headless ? new HeadlessRenderer() : Object.assign(new TerminalRenderer(), { loadInfo });
     machine.screen.start(renderer);
+
+    let exiting = false;
+    const doExit = async (message: string | null) => {
+        if (exiting) return;
+        exiting = true;
+        if (screenFile) await writeFile(screenFile, dumpScreen(machine));
+        if (memoryFile) await writeFile(memoryFile, new Uint8Array(machine.memory.buf.slice(memoryFrom, memoryTo + 1)));
+        if (!headless) process.stdout.write("\x1b[?25h"); // show cursor
+        if (message !== null && !headless) {
+            console.log();
+            console.log(message);
+        }
+        process.exit(0);
+    };
+
     const onTerminate =
         exitOnHalt || exitAddr
             ? () => {
-                  renderer.update();
-                  setTimeout(() => {
-                      console.log();
-                      console.log("программа завершила работу на", hex16(machine.cpu.pc));
-                      process.exit(0);
-                  }, 1000);
+                  if (!headless) renderer.update();
+                  setTimeout(
+                      () => doExit(`программа завершила работу на ${hex16(machine.cpu.pc)}`),
+                      headless ? 0 : 1000,
+                  );
               }
             : undefined;
 
@@ -617,17 +659,60 @@ async function main() {
     });
 
     // Autorun loaded file after monitor initializes
+    const armDelayMs = 500;
     if (entryPoint !== undefined && !loadOnly) {
         setTimeout(() => {
             machine.cpu.jump(entryPoint!);
             armed.value = true;
-        }, 500);
+        }, armDelayMs);
     }
 
-    // Cleanup on exit
-    process.on("exit", () => {
-        process.stdout.write("\x1b[?25h"); // show cursor
-    });
+    // Inject key sequence after emulator settles
+    if (inputSeq) {
+        const keys = inputSeq
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+        const settleMs = armDelayMs + 1000;
+        const keyDownMs = 50;
+        const keyGapMs = 50;
+        setTimeout(() => {
+            const pressNext = (i: number) => {
+                if (i >= keys.length) return;
+                const code = keys[i];
+                keyboard.onkeydown(code);
+                setTimeout(() => {
+                    keyboard.onkeyup(code);
+                    setTimeout(() => pressNext(i + 1), keyGapMs);
+                }, keyDownMs);
+            };
+            pressNext(0);
+        }, settleMs);
+    }
+
+    // Exit on timeout
+    if (timeoutSec !== undefined) {
+        setTimeout(() => doExit(`выход по таймауту ${timeoutSec}с`), timeoutSec * 1000);
+    }
+}
+
+function dumpScreen(machine: Machine): string {
+    const { memory, screen } = machine;
+    const lines: string[] = [];
+    let addr = screen.video_memory_base;
+    for (let y = 0; y < screen.height; y++) {
+        let line = "";
+        for (let x = 0; x < screen.width; x++) {
+            const byte = memory.read_raw(addr++) & 0x7f; // strip inverse bit
+            if (byte === 0x00 || byte === 0x09 || byte === 0x0a || byte === 0x0d) {
+                line += ".";
+            } else {
+                line += rk86char(byte);
+            }
+        }
+        lines.push(line);
+    }
+    return lines.join("\r\n") + "\r\n";
 }
 
 main();

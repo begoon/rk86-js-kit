@@ -26,7 +26,7 @@ RK-86 emulator (Intel 8080 CPU) built with SvelteKit. Also available as a standa
 
 - `src/lib/core/` — emulator core (CPU, memory, screen, keyboard, sound interface, runner, disassembler)
 - `src/lib/web/` — browser layer (boot, canvas renderer, Web Audio sound, tape with save-to-file)
-- `src/lib/terminal/` — terminal emulator (Node.js/Bun, Unicode screen rendering)
+- `src/lib/terminal/` — terminal emulator (Node.js/Bun, Unicode screen rendering; supports `--headless` mode with `--input`, `--timeout`, `--exit-halt`, `--screen`, `--memory` for e2e testing)
 - `src/lib/component/` — standalone `<radio86-emulator>` web component
 - `tools/` — build scripts (catalog generator, version)
 - `src/routes/` — SvelteKit pages and UI components
@@ -38,6 +38,7 @@ RK-86 emulator (Intel 8080 CPU) built with SvelteKit. Also available as a standa
 - `tests/` — bun unit tests
 - `tests/cpu/` — auto-generated table-driven CPU test data (one file per instruction)
 - `tests/generate_cpu_data.ts` — generates `tests/cpu/*_data.ts` from the CPU implementation
+- `tests/rk86_terminal_e2e.test.ts` — e2e tests that spawn the terminal emulator in `--headless` mode and assert on screen/memory dumps
 
 ## Generated files (gitignored)
 

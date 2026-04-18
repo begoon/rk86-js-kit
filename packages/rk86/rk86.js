@@ -2273,11 +2273,11 @@ if (false) {}
 
 // src/lib/terminal/rk86_terminal.ts
 import { existsSync } from "fs";
-import { readFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.15",
+  version: "2.0.16",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -4220,6 +4220,11 @@ class TerminalRenderer {
     process.stdout.write(output);
   }
 }
+
+class HeadlessRenderer {
+  connect(_machine) {}
+  update() {}
+}
 var KEY_MAP = {
   a: "KeyA",
   b: "KeyB",
@@ -4341,6 +4346,13 @@ function printHelp() {
   -g <\u0430\u0434\u0440\u0435\u0441>               \u0430\u0434\u0440\u0435\u0441 \u0437\u0430\u043F\u0443\u0441\u043A\u0430 (\u043D\u0435\u0441\u043E\u0432\u043C\u0435\u0441\u0442\u0438\u043C \u0441 -p)
   --exit-halt              \u0432\u044B\u0445\u043E\u0434 \u043F\u0440\u0438 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0438 HLT
   --exit-address [\u0430\u0434\u0440\u0435\u0441]   \u0432\u044B\u0445\u043E\u0434 \u043F\u0440\u0438 \u043F\u0435\u0440\u0435\u0445\u043E\u0434\u0435 \u043D\u0430 \u0430\u0434\u0440\u0435\u0441 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E: 0xFFFE)
+  --headless               \u0431\u0435\u0437 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u044D\u043A\u0440\u0430\u043D\u0430 (\u0434\u043B\u044F \u0430\u0432\u0442\u043E\u0442\u0435\u0441\u0442\u043E\u0432)
+  --timeout <\u0441\u0435\u043A>          \u0432\u044B\u0445\u043E\u0434 \u043F\u043E \u0442\u0430\u0439\u043C\u0430\u0443\u0442\u0443
+  --memory <\u0444\u0430\u0439\u043B>          \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043F\u0430\u043C\u044F\u0442\u044C \u0432 \u0444\u0430\u0439\u043B \u043F\u0440\u0438 \u0432\u044B\u0445\u043E\u0434\u0435
+  --memory-from <\u0430\u0434\u0440\u0435\u0441>    \u043D\u0430\u0447\u0430\u043B\u043E \u043E\u0431\u043B\u0430\u0441\u0442\u0438 \u0434\u0430\u043C\u043F\u0430 \u043F\u0430\u043C\u044F\u0442\u0438 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E: 0x0000)
+  --memory-to <\u0430\u0434\u0440\u0435\u0441>      \u043A\u043E\u043D\u0435\u0446 \u043E\u0431\u043B\u0430\u0441\u0442\u0438 \u0434\u0430\u043C\u043F\u0430 \u043F\u0430\u043C\u044F\u0442\u0438 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E: 0xFFFF)
+  --screen <\u0444\u0430\u0439\u043B>          \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u044D\u043A\u0440\u0430\u043D 78x30 \u043A\u0430\u043A \u0442\u0435\u043A\u0441\u0442 \u043F\u0440\u0438 \u0432\u044B\u0445\u043E\u0434\u0435
+  --input <seq>            \u0438\u043D\u044A\u0435\u043A\u0446\u0438\u044F \u043A\u043B\u0430\u0432\u0438\u0448 (\u0447\u0435\u0440\u0435\u0437 \u0437\u0430\u043F\u044F\u0442\u0443\u044E): KeyA,Digit1,Enter,...
 
 \u041F\u0440\u0438\u043C\u0435\u0440\u044B:
   bunx rk86                          \u0437\u0430\u043F\u0443\u0441\u043A \u043C\u043E\u043D\u0438\u0442\u043E\u0440\u0430
@@ -4411,6 +4423,15 @@ async function main() {
   const exitAddrValue = arg(args, "--exit-address", "0xFFFE", /^0x[0-9a-fA-F]+$/i, (v) => parseInt(v, 16));
   const exitAddr = exitAddrValue !== undefined;
   const monitorFile_ = arg(args, "-m");
+  const headless = flag(args, "--headless");
+  const timeoutSec = arg(args, "--timeout", undefined, /^\d+(\.\d+)?$/, parseFloat);
+  const memoryFile = arg(args, "--memory");
+  const addrRe = /^(0x)?[0-9a-fA-F]+$/i;
+  const parseAddr = (v) => parseInt(v.toLowerCase().startsWith("0x") ? v.slice(2) : v, 16) & 65535;
+  const memoryFrom = arg(args, "--memory-from", undefined, addrRe, parseAddr) ?? 0;
+  const memoryTo = arg(args, "--memory-to", undefined, addrRe, parseAddr) ?? 65535;
+  const screenFile = arg(args, "--screen");
+  const inputSeq = arg(args, "--input");
   const programFile = args[0];
   const keyboard = new Keyboard;
   const io = new IO;
@@ -4472,19 +4493,36 @@ async function main() {
     if (goAddr !== undefined)
       entryPoint = goAddr;
   }
-  process.stdout.write("\x1B[?25l");
-  process.stdout.write("\x1B[2J");
-  setupKeyboard(keyboard);
-  const renderer = new TerminalRenderer;
-  renderer.loadInfo = loadInfo;
+  if (!headless) {
+    process.stdout.write("\x1B[?25l");
+    process.stdout.write("\x1B[2J");
+    setupKeyboard(keyboard);
+  } else {
+    process.on("SIGINT", () => doExit(null));
+  }
+  const renderer = headless ? new HeadlessRenderer : Object.assign(new TerminalRenderer, { loadInfo });
   machine.screen.start(renderer);
-  const onTerminate = exitOnHalt || exitAddr ? () => {
-    renderer.update();
-    setTimeout(() => {
+  let exiting = false;
+  const doExit = async (message) => {
+    if (exiting)
+      return;
+    exiting = true;
+    if (screenFile)
+      await writeFile(screenFile, dumpScreen(machine));
+    if (memoryFile)
+      await writeFile(memoryFile, new Uint8Array(machine.memory.buf.slice(memoryFrom, memoryTo + 1)));
+    if (!headless)
+      process.stdout.write("\x1B[?25h");
+    if (message !== null && !headless) {
       console.log();
-      console.log("\u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043B\u0430 \u0440\u0430\u0431\u043E\u0442\u0443 \u043D\u0430", hex16(machine.cpu.pc));
-      process.exit(0);
-    }, 1000);
+      console.log(message);
+    }
+    process.exit(0);
+  };
+  const onTerminate = exitOnHalt || exitAddr ? () => {
+    if (!headless)
+      renderer.update();
+    setTimeout(() => doExit(`\u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043B\u0430 \u0440\u0430\u0431\u043E\u0442\u0443 \u043D\u0430 ${hex16(machine.cpu.pc)}`), headless ? 0 : 1000);
   } : undefined;
   const armed = { value: entryPoint === undefined };
   machine.runner.execute({
@@ -4493,14 +4531,54 @@ async function main() {
     on_terminate: onTerminate,
     armed
   });
+  const armDelayMs = 500;
   if (entryPoint !== undefined && !loadOnly) {
     setTimeout(() => {
       machine.cpu.jump(entryPoint);
       armed.value = true;
-    }, 500);
+    }, armDelayMs);
   }
-  process.on("exit", () => {
-    process.stdout.write("\x1B[?25h");
-  });
+  if (inputSeq) {
+    const keys = inputSeq.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+    const settleMs = armDelayMs + 1000;
+    const keyDownMs = 50;
+    const keyGapMs = 50;
+    setTimeout(() => {
+      const pressNext = (i) => {
+        if (i >= keys.length)
+          return;
+        const code = keys[i];
+        keyboard.onkeydown(code);
+        setTimeout(() => {
+          keyboard.onkeyup(code);
+          setTimeout(() => pressNext(i + 1), keyGapMs);
+        }, keyDownMs);
+      };
+      pressNext(0);
+    }, settleMs);
+  }
+  if (timeoutSec !== undefined) {
+    setTimeout(() => doExit(`\u0432\u044B\u0445\u043E\u0434 \u043F\u043E \u0442\u0430\u0439\u043C\u0430\u0443\u0442\u0443 ${timeoutSec}\u0441`), timeoutSec * 1000);
+  }
+}
+function dumpScreen(machine) {
+  const { memory, screen } = machine;
+  const lines = [];
+  let addr = screen.video_memory_base;
+  for (let y = 0;y < screen.height; y++) {
+    let line = "";
+    for (let x = 0;x < screen.width; x++) {
+      const byte = memory.read_raw(addr++) & 127;
+      if (byte === 0 || byte === 9 || byte === 10 || byte === 13) {
+        line += ".";
+      } else {
+        line += rk86char(byte);
+      }
+    }
+    lines.push(line);
+  }
+  return lines.join(`\r
+`) + `\r
+`;
 }
 main();
