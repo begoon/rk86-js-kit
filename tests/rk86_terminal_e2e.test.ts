@@ -140,6 +140,7 @@ function assertSnapshotMatchesGolden(actualPath: string, goldenPath: string) {
     const actualObj = JSON.parse(readFileSync(actualPath, "utf-8"));
     const goldenObj = JSON.parse(readFileSync(goldenPath, "utf-8"));
     actualObj.created = goldenObj.created; // drop non-deterministic timestamp
+    actualObj.version = goldenObj.version; // version bumps are not a snapshot regression
     const actual = JSON.stringify(actualObj, null, 4);
     const golden = JSON.stringify(goldenObj, null, 4);
     assertSnapshotsEqual(actual, golden, goldenPath);
