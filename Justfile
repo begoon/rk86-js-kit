@@ -71,5 +71,3 @@ build-pong:
 
 update-playground:
     cp ../asm8/docs/playground.js static/asm/
-    cp ../asm8/docs/index.html static/asm/
-    cp ../asm8/docs/style.css static/asm/
