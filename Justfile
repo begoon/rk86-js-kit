@@ -68,3 +68,8 @@ build-exiter:
 
 build-pong:
     bunx asm8080 info/asm/pong.asm -o info/asm --split
+
+update-playground:
+    cp ../asm8/docs/playground.js static/asm/
+    cp ../asm8/docs/index.html static/asm/
+    cp ../asm8/docs/style.css static/asm/

@@ -57,13 +57,13 @@ export class Keyboard {
     }
 
     static key_table: Record<string, [number, number]> = {
-        F8: [0, 0x01],
-        F9: [0, 0x02],
-        F5: [0, 0x04],
-        F1: [0, 0x08],
-        F2: [0, 0x10],
-        F3: [0, 0x20],
-        F4: [0, 0x40],
+        F8: [0, 0x01], // ↖︎ (home)
+        F9: [0, 0x02], // СТР (clean screen)
+        F5: [0, 0x04], // AP2 (ESC)
+        F1: [0, 0x08], // Ф1
+        F2: [0, 0x10], // Ф2
+        F3: [0, 0x20], // Ф3
+        F4: [0, 0x40], // Ф4
         Tab: [1, 0x01],
         Backquote: [1, 0x02],
         Enter: [1, 0x04],
@@ -82,13 +82,13 @@ export class Keyboard {
         Digit7: [2, 0x80],
         Digit8: [3, 0x01],
         Digit9: [3, 0x02],
-        F6: [3, 0x04],
+        F6: [3, 0x04], // "*" (RUS), ":" (LAT)
         Semicolon: [3, 0x08],
         Comma: [3, 0x10],
         Minus: [3, 0x20],
         Period: [3, 0x40],
         Slash: [3, 0x80],
-        F7: [4, 0x01],
+        F7: [4, 0x01], // "Ю" (RUS), "@" (LAT)
         KeyA: [4, 0x02],
         KeyB: [4, 0x04],
         KeyC: [4, 0x08],
