@@ -70,4 +70,8 @@ build-pong:
     bunx asm8080 info/asm/pong.asm -o info/asm --split
 
 update-playground:
-    cp ../asm8/docs/playground.js static/asm/
+    cp \
+    ../asm8/docs/playground.js \
+    ../asm8/docs/index.html \
+    ../asm8/docs/style.css \
+    static/asm/
